@@ -42,40 +42,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build APK (assembleLibreDebug)
-        run: |
-          set -eo pipefail
-          ./gradlew assembleLibreDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle_output.log
-
-      - name: Extract Failure Summary
-        if: failure()
-        run: |
-          tail -n 250 /tmp/gradle_output.log > /tmp/failure_summary.txt
-
-      - name: Create Failure Release
-        if: failure()
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: build-failure
-          name: Build Failed Details
-          body_path: /tmp/failure_summary.txt
-          files: /tmp/gradle_output.log
-          draft: false
-          prerelease: true
-
-      - name: Debug Output Dir
-        run: |
-          echo "=== APK OUTPUT DIRECTORY CONTENT ==="
-          find app/build/outputs/ -type f || true
-
-      - name: Upload Build Log on Failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-failure-logs
-          path: |
-            **/build/reports/
-            /tmp/gradle_output.log
-          retention-days: 7
+        run: ./gradlew assembleLibreDebug --no-daemon --stacktrace
 
       - name: Prepare APK Output
         run: |
@@ -97,5 +64,7 @@ jobs:
         with:
           files: build-output/KeePassDX-Custom-libre-debug.apk
           name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
           draft: false
           prerelease: false
