@@ -187,9 +187,57 @@
             android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity
             android:name="com.kunzisoft.keepass.importer.ui.ImportWizardActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/import_wizard_title"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:configChanges="keyboardHidden|orientation|screenSize">
+
+            <!-- Handle file share (ACTION_SEND) -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/csv" />
+                <data android:mimeType="text/comma-separated-values" />
+                <data android:mimeType="application/csv" />
+                <data android:mimeType="application/vnd.ms-excel" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="text/json" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <!-- Handle open file by MIME (ACTION_VIEW) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="text/csv" />
+                <data android:mimeType="text/comma-separated-values" />
+                <data android:mimeType="application/csv" />
+                <data android:mimeType="application/vnd.ms-excel" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="text/json" />
+            </intent-filter>
+
+            <!-- Handle open file by extension (ACTION_VIEW) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.csv" />
+                <data android:pathPattern=".*\\..*\\.csv" />
+                <data android:pathPattern=".*\\..*\\..*\\.csv" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.csv" />
+                <data android:pathPattern=".*\\.json" />
+                <data android:pathPattern=".*\\..*\\.json" />
+                <data android:pathPattern=".*\\..*\\..*\\.json" />
+            </intent-filter>
+        </activity>
         <activity
             android:name="com.kunzisoft.keepass.activities.EntryEditActivity"
             android:windowSoftInputMode="adjustResize" />

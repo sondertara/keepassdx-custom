@@ -811,6 +811,8 @@
     <string name="import_btn_start">立即开始导入</string>
     <string name="import_success">已成功导入 %1$d 个条目与 %2$d 个分组</string>
     <string name="import_error">导入失败：%1$s</string>
+    <string name="import_error_database_locked">密码库尚未打开或已锁定，请先解锁您的密码库以完成导入</string>
+    <string name="import_action_unlock_database">解锁密码库</string>
     <string name="import_no_file_selected">请先选择要导入的文件</string>
     <string name="import_parsing_in_progress">正在解析文件数据…</string>
     <string name="importing_in_progress">正在将条目写入数据库…</string>

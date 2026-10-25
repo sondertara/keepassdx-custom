@@ -848,6 +848,8 @@
     <string name="import_btn_start">Start Import</string>
     <string name="import_success">Successfully imported %1$d entries and %2$d groups</string>
     <string name="import_error">Import failed: %1$s</string>
+    <string name="import_error_database_locked">Database is not open or unlocked yet. Please unlock your database first.</string>
+    <string name="import_action_unlock_database">Unlock Database</string>
     <string name="import_no_file_selected">Please select a file to import</string>
     <string name="import_parsing_in_progress">Reading vault file…</string>
     <string name="importing_in_progress">Importing entries into database…</string>

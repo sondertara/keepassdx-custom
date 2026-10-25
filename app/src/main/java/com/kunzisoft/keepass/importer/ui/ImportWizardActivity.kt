@@ -59,6 +59,7 @@ import java.io.InputStream
 class ImportWizardActivity : DatabaseLockActivity() {
 
     override fun viewToInvalidateTimeout(): View? = findViewById(android.R.id.content)
+    override fun finishActivityIfReloadRequested(): Boolean = false
 
     private var currentParentGroupId: GroupId? = null
     private var selectedFileUri: Uri? = null
@@ -98,6 +99,35 @@ class ImportWizardActivity : DatabaseLockActivity() {
 
         initViews()
         setupFormatSpinner()
+        handleIncomingIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIncomingIntent(intent)
+    }
+
+    private fun handleIncomingIntent(intent: Intent?) {
+        if (intent == null) return
+        val incomingUri: Uri? = when (intent.action) {
+            Intent.ACTION_SEND -> {
+                intent.getParcelableExtraCompat<Uri>(Intent.EXTRA_STREAM)
+                    ?: intent.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
+                    ?: intent.data
+            }
+            Intent.ACTION_VIEW -> {
+                intent.data
+                    ?: intent.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
+            }
+            else -> {
+                intent.data ?: intent.getParcelableExtraCompat<Uri>(EXTRA_FILE_URI)
+            }
+        }
+
+        if (incomingUri != null) {
+            handleSelectedFile(incomingUri)
+        }
     }
 
     private fun initViews() {
@@ -219,7 +249,8 @@ class ImportWizardActivity : DatabaseLockActivity() {
 
     private fun executeImport() {
         val database = mDatabase ?: run {
-            Toast.makeText(this, "Database not available", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.import_error_database_locked), Toast.LENGTH_LONG).show()
+            startActivity(Intent(this, com.kunzisoft.keepass.activities.FileDatabaseSelectActivity::class.java))
             return
         }
 
@@ -297,11 +328,15 @@ class ImportWizardActivity : DatabaseLockActivity() {
     companion object {
         private const val TAG = "ImportWizardActivity"
         const val EXTRA_PARENT_GROUP_ID = "EXTRA_PARENT_GROUP_ID"
+        const val EXTRA_FILE_URI = "EXTRA_FILE_URI"
 
-        fun launch(context: Context, parentGroupId: GroupId? = null) {
+        fun launch(context: Context, parentGroupId: GroupId? = null, fileUri: Uri? = null) {
             val intent = Intent(context, ImportWizardActivity::class.java).apply {
                 if (parentGroupId != null) {
                     putExtra(EXTRA_PARENT_GROUP_ID, parentGroupId)
+                }
+                if (fileUri != null) {
+                    putExtra(EXTRA_FILE_URI, fileUri)
                 }
             }
             context.startActivity(intent)
