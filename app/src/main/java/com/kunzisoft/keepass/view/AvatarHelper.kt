@@ -29,7 +29,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import androidx.collection.LruCache
+import android.util.LruCache
 import java.util.Locale
 import kotlin.math.abs
 

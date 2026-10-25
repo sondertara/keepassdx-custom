@@ -44,6 +44,15 @@ jobs:
       - name: Build APK (assembleLibreDebug)
         run: ./gradlew assembleLibreDebug --no-daemon --stacktrace
 
+      - name: Upload Build Log on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-failure-logs
+          path: |
+            **/build/reports/
+          retention-days: 7
+
       - name: Prepare APK Output
         run: |
           mkdir -p build-output

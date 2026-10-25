@@ -474,7 +474,9 @@ class NodesAdapter(
         holder.imageIdentifier?.setColorFilter(iconColor)
         holder.icon.apply {
             if (node is EntryInfo) {
-                if (node.icon.customIconUUID != null) {
+                val iconImage = node.icon.getIconImageToDraw()
+                val hasCustomIcon = iconImage.custom.uuid.mostSignificantBits != 0L || iconImage.custom.uuid.leastSignificantBits != 0L
+                if (hasCustomIcon) {
                     iconDrawableFactory.assignDatabaseIcon(this, node.icon, iconColor)
                 } else {
                     setImageDrawable(AvatarHelper.getAvatarDrawable(context, node.getVisualTitle()))
