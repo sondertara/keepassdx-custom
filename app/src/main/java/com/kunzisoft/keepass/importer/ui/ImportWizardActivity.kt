@@ -58,6 +58,8 @@ import java.io.InputStream
 
 class ImportWizardActivity : DatabaseLockActivity() {
 
+    override fun viewToInvalidateTimeout(): View? = findViewById(android.R.id.content)
+
     private var currentParentGroupId: GroupId? = null
     private var selectedFileUri: Uri? = null
     private var selectedFileName: String? = null

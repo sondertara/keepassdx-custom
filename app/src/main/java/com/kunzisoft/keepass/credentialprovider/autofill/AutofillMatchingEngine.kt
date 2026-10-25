@@ -197,7 +197,7 @@ object AutofillMatchingEngine {
             // 1. Title matching
             when {
                 title == keyword -> score += 100 // Exact title match
-                title.startsWith("$keyword ") || title.startsWith("$keyword-") || title.startsWith("$keyword_") -> score += 85
+                title.startsWith("$keyword ") || title.startsWith("$keyword-") || title.startsWith("${keyword}_") -> score += 85
                 title.endsWith(" $keyword") -> score += 75
                 title.contains(keyword) -> score += 60
             }

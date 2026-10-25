@@ -54,7 +54,6 @@ import com.kunzisoft.keepass.model.VaultCategory
 import com.kunzisoft.keepass.otp.scanner.OtpEntryQuickCreator
 import com.kunzisoft.keepass.otp.scanner.QrCodeDecoder
 import com.kunzisoft.keepass.otp.scanner.QrScanActivity
-import com.kunzisoft.keepass.timeout.TimeoutHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.appcompat.app.ActionBarDrawerToggle

@@ -21,6 +21,7 @@ package com.kunzisoft.keepass.otp.scanner
 
 import android.os.Bundle
 import com.kunzisoft.keepass.activities.legacy.DatabaseActivity
+import com.kunzisoft.keepass.database.DatabaseTaskProvider.Companion.startDatabaseService
 import com.kunzisoft.keepass.database.element.GroupId
 import com.kunzisoft.keepass.model.EntryInfo
 import com.kunzisoft.keepass.otp.OtpElement
