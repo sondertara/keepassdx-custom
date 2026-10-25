@@ -23,6 +23,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kunzisoft.keepass.R
+import com.kunzisoft.keepass.credentialprovider.autofill.AutofillMatchingEngine
 import com.kunzisoft.keepass.database.ContextualDatabase
 import com.kunzisoft.keepass.database.element.Tags
 import com.kunzisoft.keepass.database.element.node.DefaultNodeFilter
@@ -124,12 +125,46 @@ class SearchViewModel(application: Application): AndroidViewModel(application) {
                     _searchUIState.update { groupState ->
                         groupState.copy(loaded = false)
                     }
-                    val searchParameters = mSearchState.searchParameters
-                    val searchGroup = database.createSearchGroupInfo(
+                    var searchParameters = mSearchState.searchParameters
+                    var searchGroup = database.createSearchGroupInfo(
                         searchParameters = searchParameters,
                         fromGroup = mCurrentGroup?.nodeId,
                         max = SearchHelper.MAX_SEARCH_ENTRY
                     )
+
+                    // Smooth fallback for Autofill manual selection:
+                    // If launched via Autofill/searchInfo and exact search produces 0 results,
+                    // attempt smart fallback keyword search in titles & URLs.
+                    if (mSearchState.tempSearchInfo && searchGroup.numberOfSearchResults() == 0) {
+                        val fallbackKeywords = if (searchParameters.searchInAppIds) {
+                            AutofillMatchingEngine.extractAppKeywords(searchParameters.searchQuery)
+                        } else if (searchParameters.searchInUrls || searchParameters.searchByDomain) {
+                            AutofillMatchingEngine.extractDomainKeywords(searchParameters.searchQuery)
+                        } else {
+                            emptyList()
+                        }
+                        val primaryKeyword = fallbackKeywords.firstOrNull()
+                        if (!primaryKeyword.isNullOrBlank()) {
+                            val fallbackParameters = searchParameters.copy().apply {
+                                searchQuery = primaryKeyword
+                                searchInTitles = true
+                                searchInUrls = true
+                                searchInAppIds = false
+                                searchByDomain = false
+                                searchBySubDomain = false
+                            }
+                            val fallbackGroup = database.createSearchGroupInfo(
+                                searchParameters = fallbackParameters,
+                                fromGroup = mCurrentGroup?.nodeId,
+                                max = SearchHelper.MAX_SEARCH_ENTRY
+                            )
+                            if (fallbackGroup.numberOfSearchResults() > 0) {
+                                searchGroup = fallbackGroup
+                                searchParameters = fallbackParameters
+                                mSearchState = mSearchState.copy(searchParameters = fallbackParameters)
+                            }
+                        }
+                    }
                     val allowAdvancedSearch = !mSearchState.tempSearchInfo
                     val title = if (mSearchState.tempSearchInfo)
                         searchGroup.title

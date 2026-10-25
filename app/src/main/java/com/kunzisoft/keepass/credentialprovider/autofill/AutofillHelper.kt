@@ -117,15 +117,17 @@ object AutofillHelper {
     }
 
     private fun makeEntryTitle(entryInfo: EntryInfo): String {
-        if (entryInfo.title.isNotEmpty() && entryInfo.username.isNotEmpty())
-            return String.format("%s (%s)", entryInfo.title, entryInfo.username)
-        if (entryInfo.title.isNotEmpty())
-            return entryInfo.title
-        if (entryInfo.url.isNotEmpty())
-            return entryInfo.url
-        if (entryInfo.username.isNotEmpty())
-            return entryInfo.username
-        return ""
+        val baseTitle = when {
+            entryInfo.title.isNotEmpty() && entryInfo.username.isNotEmpty() ->
+                String.format("%s (%s)", entryInfo.title, entryInfo.username)
+            entryInfo.title.isNotEmpty() -> entryInfo.title
+            entryInfo.url.isNotEmpty() -> entryInfo.url
+            entryInfo.username.isNotEmpty() -> entryInfo.username
+            else -> ""
+        }
+        val tagPasskey = if (entryInfo.passkey != null) " [Passkey]" else ""
+        val tagOtp = if (entryInfo.otpModel != null || entryInfo.getOtpToken() != null) " [2FA]" else ""
+        return "$baseTitle$tagPasskey$tagOtp"
     }
 
     private fun newRemoteViews(context: Context,
@@ -373,7 +375,22 @@ object AutofillHelper {
                     InlineSuggestionUi.newContentBuilder(pendingIntent).apply {
                         setContentDescription(context.getString(R.string.autofill_sign_in_prompt))
                         setTitle(entryInfo.title)
-                        setSubtitle(entryInfo.username)
+                        val subtitleText = buildString {
+                            if (entryInfo.username.isNotEmpty()) {
+                                append(entryInfo.username)
+                            }
+                            val hasPasskey = entryInfo.passkey != null
+                            val hasOtp = entryInfo.otpModel != null || entryInfo.getOtpToken() != null
+                            if (hasPasskey) {
+                                if (isNotEmpty()) append(" • ")
+                                append("Passkey")
+                            }
+                            if (hasOtp) {
+                                if (isNotEmpty()) append(" • ")
+                                append("2FA")
+                            }
+                        }
+                        setSubtitle(subtitleText)
                         setStartIcon(
                             Icon.createWithResource(context, R.mipmap.ic_launcher_round).apply {
                                 setTintBlendMode(BlendMode.DST)

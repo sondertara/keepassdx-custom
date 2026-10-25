@@ -24,6 +24,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.os.PersistableBundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -123,12 +126,36 @@ fun Context.copyToClipboard(
             }
         },
     )
+    vibrateFeedback()
     if (label.isNotEmpty() && Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {
         Toast.makeText(
             applicationContext,
             applicationContext.getString(R.string.copy_field, label),
             Toast.LENGTH_LONG
         ).show()
+    }
+}
+
+private fun Context.vibrateFeedback() {
+    try {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+            vibratorManager?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+        }
+
+        vibrator?.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                it.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                it.vibrate(30)
+            }
+        }
+    } catch (_: Exception) {
+        // Ignored if vibration permission not granted or device has no vibrator
     }
 }
 

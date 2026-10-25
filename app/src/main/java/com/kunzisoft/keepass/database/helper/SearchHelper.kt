@@ -20,6 +20,7 @@
 package com.kunzisoft.keepass.database.helper
 
 import android.content.Context
+import com.kunzisoft.keepass.credentialprovider.autofill.AutofillMatchingEngine
 import com.kunzisoft.keepass.database.ContextualDatabase
 import com.kunzisoft.keepass.database.search.SearchParameters
 import com.kunzisoft.keepass.model.EntryInfo
@@ -154,18 +155,34 @@ object SearchHelper {
                 && !searchInfo.containsOnlyNullValues()
             ) {
                 searchInfo.getSearchParametersFromSearchInfo(context) { searchParameters ->
-                    // If search provide results
-                    database.createSearchGroupInfo(
+                    // Tier 1: Exact search
+                    val searchGroup = database.createSearchGroupInfo(
                         searchParameters = searchParameters,
                         max = MAX_SEARCH_ENTRY
-                    ).let { searchGroup ->
-                        if (searchGroup.numberOfSearchResults() > 0) {
+                    )
+                    if (searchGroup.numberOfSearchResults() > 0) {
+                        val ranked = AutofillMatchingEngine.rankEntries(
+                            entries = searchGroup.getSearchResults(),
+                            searchInfo = searchInfo
+                        )
+                        onItemsFound.invoke(
+                            database,
+                            ranked
+                        )
+                    } else {
+                        // Tier 2: Smart fallback heuristic matching
+                        val fallbackEntries = AutofillMatchingEngine.findFallbackMatches(
+                            database = database,
+                            searchInfo = searchInfo
+                        )
+                        if (fallbackEntries.isNotEmpty()) {
                             onItemsFound.invoke(
                                 database,
-                                searchGroup.getSearchResults()
+                                fallbackEntries
                             )
-                        } else
+                        } else {
                             onItemNotFound.invoke(database)
+                        }
                     }
                 }
             } else
