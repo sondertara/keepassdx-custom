@@ -186,6 +186,11 @@
             android:screenOrientation="portrait"
             android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity
+            android:name="com.kunzisoft.keepass.importer.ui.ImportWizardActivity"
+            android:exported="false"
+            android:label="@string/import_wizard_title"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
+        <activity
             android:name="com.kunzisoft.keepass.activities.EntryEditActivity"
             android:windowSoftInputMode="adjustResize" />
         <!-- About and Settings -->

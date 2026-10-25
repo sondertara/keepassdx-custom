@@ -42,7 +42,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import android.graphics.BitmapFactory
 import android.widget.Toast
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.kunzisoft.keepass.importer.DatabaseBatchImporter
+import com.kunzisoft.keepass.importer.model.ImportBatchResult
+import com.kunzisoft.keepass.importer.parsers.GoogleAuthMigrationDecoder
+import com.kunzisoft.keepass.importer.ui.ImportWizardActivity
 import com.kunzisoft.keepass.otp.scanner.OtpEntryQuickCreator
 import com.kunzisoft.keepass.otp.scanner.QrCodeDecoder
 import com.kunzisoft.keepass.otp.scanner.QrScanActivity
@@ -372,6 +377,10 @@ class GroupActivity : DatabaseLockActivity() {
                     R.id.menu_app_settings -> {
                         // To avoid flickering when launch settings in a LockingActivity
                         SettingsActivity.launch(this@GroupActivity, true)
+                    }
+                    R.id.menu_import_vault -> {
+                        val currentGroupId = mGroupViewModel.mainGroup?.nodeId ?: mDatabase?.rootGroup?.nodeId
+                        ImportWizardActivity.launch(this@GroupActivity, currentGroupId)
                     }
                     R.id.menu_merge_from -> {
                         if (mDatabaseAllowUserVerification) {
@@ -877,6 +886,45 @@ class GroupActivity : DatabaseLockActivity() {
     }
 
     private fun handleScannedOtpResult(qrText: String) {
+        if (GoogleAuthMigrationDecoder.isMigrationUri(qrText)) {
+            val entries = GoogleAuthMigrationDecoder.decode(qrText)
+            if (entries.isEmpty()) {
+                Toast.makeText(this, R.string.qr_invalid_otp, Toast.LENGTH_LONG).show()
+                return
+            }
+            val database = mDatabase ?: return
+            val currentGroupId = mGroupViewModel.mainGroup?.nodeId ?: database.rootGroup?.nodeId ?: return
+
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.google_auth_migration_detected_title)
+                .setMessage(getString(R.string.google_auth_migration_detected_message, entries.size))
+                .setPositiveButton(R.string.import_all) { _, _ ->
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val batchResult = ImportBatchResult(
+                            sourceName = "Google Authenticator",
+                            rootEntries = entries.toMutableList(),
+                            totalEntriesCount = entries.size,
+                            totpEntriesCount = entries.size
+                        )
+                        DatabaseBatchImporter.importBatch(
+                            database = database,
+                            targetParentGroupId = currentGroupId,
+                            batchResult = batchResult,
+                            createDedicatedGroup = false
+                        )
+                        saveDatabase()
+                        withContext(Dispatchers.Main) {
+                            val msg = getString(R.string.google_auth_migration_success, entries.size)
+                            val coordinator = findViewById<View>(R.id.group_coordinator) ?: findViewById<View>(android.R.id.content)
+                            Snackbar.make(coordinator, msg, Snackbar.LENGTH_LONG).show()
+                        }
+                    }
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+            return
+        }
+
         val parsedOtp = OtpEntryQuickCreator.parse(qrText)
         if (parsedOtp == null) {
             Toast.makeText(this, R.string.qr_invalid_otp, Toast.LENGTH_LONG).show()
@@ -1161,6 +1209,7 @@ class GroupActivity : DatabaseLockActivity() {
             //  depending on current mode
             val modeCondition = mSpecialMode == SpecialMode.DEFAULT
             menu.findItem(R.id.menu_app_settings)?.isVisible = modeCondition
+            menu.findItem(R.id.menu_import_vault)?.isVisible = (mDatabase?.isReadOnly == false) && modeCondition
             menu.findItem(R.id.menu_merge_from)?.isVisible = mGroupViewModel.mergeFromDatabaseActionAllowed() && modeCondition
             menu.findItem(R.id.menu_save_copy_to)?.isVisible = mGroupViewModel.copyToDatabaseActionAllowed() && modeCondition
             menu.findItem(R.id.menu_about)?.isVisible = modeCondition

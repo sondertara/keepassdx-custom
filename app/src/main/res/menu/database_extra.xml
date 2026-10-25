@@ -20,6 +20,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <group android:id="@+id/group_merge">
+        <item android:id="@+id/menu_import_vault"
+            android:icon="@drawable/ic_file_download_white_24dp"
+            android:title="@string/menu_import_vault"
+            android:orderInCategory="79"
+            app:iconTint="?attr/colorControlNormal"
+            app:showAsAction="ifRoom" />
         <item android:id="@+id/menu_merge_from"
             android:icon="@drawable/ic_merge_from_white_24dp"
             android:title="@string/menu_merge_from"
