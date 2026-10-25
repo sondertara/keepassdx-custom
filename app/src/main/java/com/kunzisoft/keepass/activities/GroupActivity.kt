@@ -42,12 +42,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import android.graphics.BitmapFactory
 import android.widget.Toast
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.kunzisoft.keepass.importer.DatabaseBatchImporter
 import com.kunzisoft.keepass.importer.model.ImportBatchResult
 import com.kunzisoft.keepass.importer.parsers.GoogleAuthMigrationDecoder
 import com.kunzisoft.keepass.importer.ui.ImportWizardActivity
+import com.kunzisoft.keepass.model.VaultCategory
 import com.kunzisoft.keepass.otp.scanner.OtpEntryQuickCreator
 import com.kunzisoft.keepass.otp.scanner.QrCodeDecoder
 import com.kunzisoft.keepass.otp.scanner.QrScanActivity
@@ -166,6 +169,13 @@ class GroupActivity : DatabaseLockActivity() {
     private var numberChildrenView: TextView? = null
     private var addNodeButtonView: AddNodeButtonView? = null
     private var breadcrumbListView: RecyclerView? = null
+    private var filterChipGroup: ChipGroup? = null
+    private var chipFilterAll: Chip? = null
+    private var chipFlatView: Chip? = null
+    private var chipFilterPasswords: Chip? = null
+    private var chipFilterPasskeys: Chip? = null
+    private var chipFilterTotp: Chip? = null
+    private var chipFilterFavorites: Chip? = null
     private var searchView: ViewGroup? = null
     private var loadingView: ProgressBar? = null
 
@@ -330,6 +340,39 @@ class GroupActivity : DatabaseLockActivity() {
         databaseColorView = findViewById(R.id.database_color)
         databaseNameView = findViewById(R.id.database_name)
         breadcrumbListView = findViewById(R.id.breadcrumb_list)
+        filterChipGroup = findViewById(R.id.filter_chip_group)
+        chipFilterAll = findViewById(R.id.chip_filter_all)
+        chipFlatView = findViewById(R.id.chip_flat_view)
+        chipFilterPasswords = findViewById(R.id.chip_filter_passwords)
+        chipFilterPasskeys = findViewById(R.id.chip_filter_passkeys)
+        chipFilterTotp = findViewById(R.id.chip_filter_totp)
+        chipFilterFavorites = findViewById(R.id.chip_filter_favorites)
+
+        filterChipGroup?.setOnCheckedStateChangeListener { _, checkedIds ->
+            if (checkedIds.isEmpty()) return@setOnCheckedStateChangeListener
+            when (checkedIds.first()) {
+                R.id.chip_filter_all -> {
+                    mGroupViewModel.setFlatView(false)
+                    mGroupViewModel.setVaultCategory(VaultCategory.ALL)
+                }
+                R.id.chip_flat_view -> {
+                    mGroupViewModel.setFlatView(true)
+                    mGroupViewModel.setVaultCategory(VaultCategory.ALL)
+                }
+                R.id.chip_filter_passwords -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.PASSWORDS)
+                }
+                R.id.chip_filter_passkeys -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.PASSKEYS)
+                }
+                R.id.chip_filter_totp -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.TOTP)
+                }
+                R.id.chip_filter_favorites -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.FAVORITES)
+                }
+            }
+        }
         searchView = findViewById(R.id.search_content_view)
         toolbarAction = findViewById(R.id.toolbar_action)
         lockView = findViewById(R.id.lock_button)

@@ -35,6 +35,8 @@ import com.kunzisoft.keepass.model.NodeInfo
 import com.kunzisoft.keepass.model.SortedEntryInfo
 import com.kunzisoft.keepass.model.SortedGroupInfo
 import com.kunzisoft.keepass.model.SortedNodeInfo
+import com.kunzisoft.keepass.model.VaultCategory
+import com.kunzisoft.keepass.model.VaultNodeFilter
 import com.kunzisoft.keepass.model.toNodes
 import com.kunzisoft.keepass.settings.PreferencesUtil
 import kotlinx.coroutines.Dispatchers
@@ -97,6 +99,26 @@ class GroupViewModel(application: Application): AndroidViewModel(application) {
     private val _viewEvent = MutableSharedFlow<GroupEvent>(replay = 0)
     val viewEvent: SharedFlow<GroupEvent> = _viewEvent.asSharedFlow()
 
+    private val _vaultCategory = MutableStateFlow(VaultCategory.ALL)
+    val vaultCategory: StateFlow<VaultCategory> = _vaultCategory.asStateFlow()
+
+    private val _isFlatView = MutableStateFlow(false)
+    val isFlatView: StateFlow<Boolean> = _isFlatView.asStateFlow()
+
+    fun setVaultCategory(category: VaultCategory) {
+        if (_vaultCategory.value != category) {
+            _vaultCategory.value = category
+            loadGroup()
+        }
+    }
+
+    fun setFlatView(enabled: Boolean) {
+        if (_isFlatView.value != enabled) {
+            _isFlatView.value = enabled
+            loadGroup()
+        }
+    }
+
     private var mAutoFocusSearch: Boolean = false
     private var mRecursiveNumberEntries: Boolean = false
     private var mShowExpiredEntries: Boolean = false
@@ -152,11 +174,21 @@ class GroupViewModel(application: Application): AndroidViewModel(application) {
                             nodeFilter = mNodeFilter
                         ) ?: listOf()
                         // Children
-                        val children = mDatabase?.getSortedChildrenOf(
-                            parentId = group.nodeId,
-                            recursiveNumberOfEntries = mRecursiveNumberEntries,
-                            nodeFilter = mNodeFilter
-                        ) ?: listOf()
+                        val rawChildren: List<SortedNodeInfo> = if (_isFlatView.value || _vaultCategory.value != VaultCategory.ALL) {
+                            val targetGroup = database.getGroupById(group.nodeId) ?: database.rootGroup
+                            if (targetGroup != null) {
+                                VaultNodeFilter.getFlattenedEntries(database, targetGroup, mNodeFilter)
+                            } else {
+                                listOf()
+                            }
+                        } else {
+                            mDatabase?.getSortedChildrenOf(
+                                parentId = group.nodeId,
+                                recursiveNumberOfEntries = mRecursiveNumberEntries,
+                                nodeFilter = mNodeFilter
+                            ) ?: listOf()
+                        }
+                        val children = VaultNodeFilter.filter(rawChildren, _vaultCategory.value)
                         // To enable add button
                         val addGroupEnabled = database.allowAddGroupIn(group = group)
                         val addEntryEnabled = database.allowAddEntryIn(group = group)

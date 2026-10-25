@@ -852,4 +852,10 @@
     <string name="google_auth_migration_detected_message">Detected %1$d 2FA accounts exported from Google Authenticator. Import all of them now?</string>
     <string name="google_auth_migration_success">Successfully imported %1$d 2FA accounts</string>
     <string name="import_all">Import All</string>
+    <string name="filter_all">All</string>
+    <string name="filter_flat_view">Flat View</string>
+    <string name="filter_passwords">Passwords</string>
+    <string name="filter_passkeys">Passkeys</string>
+    <string name="filter_totp">2FA Tokens</string>
+    <string name="filter_favorites">Favorites</string>
 </resources>

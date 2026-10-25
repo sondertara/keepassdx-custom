@@ -39,6 +39,7 @@ import com.kunzisoft.keepass.database.ContextualDatabase
 import com.kunzisoft.keepass.database.element.SortNodeEnum
 import com.kunzisoft.keepass.model.SearchGroupInfo
 import com.kunzisoft.keepass.model.SortedNodeInfo
+import com.kunzisoft.keepass.model.VaultCategory
 import com.kunzisoft.keepass.viewmodels.GroupViewModel
 import kotlinx.coroutines.launch
 
@@ -120,6 +121,8 @@ class GroupFragment : DatabaseFragment() {
                         try {
                             groupUIState.group?.let { currentGroup ->
                                 val isSearchInfo = currentGroup is SearchGroupInfo
+                                        || mGroupViewModel.isFlatView.value
+                                        || mGroupViewModel.vaultCategory.value != VaultCategory.ALL
                                 val children = groupUIState.children
                                 if (children != null) {
                                     mAdapter?.rebuildList(

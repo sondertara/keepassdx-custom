@@ -815,4 +815,10 @@
     <string name="google_auth_migration_detected_message">检测到 Google Authenticator 导出的 %1$d 个 2FA 账号，是否立即全部导入？</string>
     <string name="google_auth_migration_success">已成功导入 %1$d 个 2FA 账号</string>
     <string name="import_all">全部导入</string>
+    <string name="filter_all">全部</string>
+    <string name="filter_flat_view">扁平全览</string>
+    <string name="filter_passwords">密码</string>
+    <string name="filter_passkeys">通行密钥</string>
+    <string name="filter_totp">2FA 验证码</string>
+    <string name="filter_favorites">常用收藏</string>
 </resources>
