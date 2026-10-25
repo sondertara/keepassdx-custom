@@ -396,6 +396,7 @@ class GroupViewModel(application: Application): AndroidViewModel(application) {
             when (node) {
                 is GroupInfo -> _viewEvent.emit(GroupEvent.EditGroup(node))
                 is EntryInfo -> _viewEvent.emit(GroupEvent.EditEntry(node))
+                else -> {}
             }
         }
     }
