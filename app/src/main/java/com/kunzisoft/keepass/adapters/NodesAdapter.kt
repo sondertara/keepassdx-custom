@@ -388,9 +388,7 @@ class NodesAdapter(
             holder.otpDisplay?.setOtpModel(node.otpModel)
 
             // Badges
-            val hasOtp = node.otpModel != null || node.tags.any {
-                it.label.equals("TOTP", ignoreCase = true) || it.label.equals("2FA", ignoreCase = true)
-            }
+            val hasOtp = node.otpModel != null || node.tags.contains("TOTP") || node.tags.contains("2FA")
             holder.badgeTotp?.visibility = if (hasOtp) View.VISIBLE else View.GONE
 
             val hasPasskey = node.passkey != null
