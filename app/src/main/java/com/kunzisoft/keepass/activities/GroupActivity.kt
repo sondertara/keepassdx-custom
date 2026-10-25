@@ -143,6 +143,7 @@ import com.kunzisoft.keepass.viewmodels.MainCredentialDialogViewModel
 import com.kunzisoft.keepass.viewmodels.NodeEditViewModel
 import com.kunzisoft.keepass.viewmodels.SearchViewModel
 import com.kunzisoft.keepass.viewmodels.UserVerificationViewModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -547,6 +548,16 @@ class GroupActivity : DatabaseLockActivity() {
                             mBreadcrumbAdapter?.setNode(breadcrumbs)
                             breadcrumbListView?.scrollToPosition(breadcrumbs.size -1)
                         }
+                }
+                launch {
+                    combine(
+                        mGroupViewModel.isFlatView,
+                        mGroupViewModel.vaultCategory
+                    ) { isFlat, category ->
+                        isFlat || category != VaultCategory.ALL
+                    }.collect { isNonHierarchical ->
+                        breadcrumbListView?.visibility = if (isNonHierarchical) View.GONE else View.VISIBLE
+                    }
                 }
                 launch {
                     mGroupViewModel.groupUIState

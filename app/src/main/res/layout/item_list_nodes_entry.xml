@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- Copyright 2019 Jeremy Jamet / Kunzisoft.
-     
+ Copyright 2026 Jeremy Jamet / Kunzisoft.
+
  This file is part of KeePassDX.
 
   KeePassDX is free software: you can redistribute it and/or modify
@@ -23,153 +23,202 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="@dimen/selectable_margin_top"
-    android:paddingHorizontal="@dimen/selectable_margin_horizontal">
+    android:paddingVertical="4dp"
+    android:paddingHorizontal="10dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/node_container"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical"
-        android:minHeight="@dimen/selectable_min_height"
-        style="@style/KeepassDXStyle.Selectable.Item"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+        android:foreground="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="@dimen/content_percent">
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/node_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="center"
-            android:layout_marginStart="@dimen/image_list_margin_vertical"
-            android:layout_marginLeft="@dimen/image_list_margin_vertical"
-            android:layout_marginTop="@dimen/image_list_margin_horizontal"
-            android:layout_marginEnd="@dimen/image_list_margin_vertical"
-            android:layout_marginRight="@dimen/image_list_margin_vertical"
-            android:layout_marginBottom="@dimen/image_list_margin_horizontal"
-            android:scaleType="fitXY"
-            android:src="@drawable/ic_blank_32dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
-            android:id="@+id/node_container_info"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/image_list_margin_vertical"
-            android:layout_marginLeft="@dimen/image_list_margin_vertical"
-            android:layout_marginEnd="12dp"
-            android:layout_marginRight="12dp"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/node_path"
-            app:layout_constraintEnd_toStartOf="@+id/node_options"
-            app:layout_constraintLeft_toRightOf="@+id/node_icon"
-            app:layout_constraintRight_toLeftOf="@+id/node_options"
-            app:layout_constraintStart_toEndOf="@+id/node_icon"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/node_text"
-                style="@style/KeepassDXStyle.Title.Entry"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="2"
-                tools:text="Node Title" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/node_subtext"
-                style="@style/KeepassDXStyle.SubTitle.Entry"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="-4dp"
-                android:lines="1"
-                android:singleLine="true"
-                tools:text="Node SubTitle" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/node_tags_list_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="start"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                android:orientation="horizontal"/>
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/node_meta"
-                style="@style/KeepassDXStyle.Meta.Entry"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:lines="1"
-                android:singleLine="true"
-                tools:text="7543A7EAB2EA7CFD1394F1615EBEB08C" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/node_options"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginLeft="12dp"
-            android:layout_marginEnd="12dp"
-            android:layout_marginRight="12dp"
-            android:gravity="end"
             android:orientation="horizontal"
-            app:layout_constraintTop_toTopOf="@+id/node_container_info"
-            app:layout_constraintBottom_toTopOf="@+id/node_path"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:gravity="top"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="12dp">
 
-            <com.kunzisoft.keepass.view.OtpDisplayView
-                android:id="@+id/node_otp_display"
-                style="@style/KeepassDXStyle.Selectable.Item"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingStart="8dp"
-                android:paddingLeft="8dp"
-                android:paddingEnd="4dp"
-                android:paddingRight="4dp" />
-
+            <!-- 2FAS Style 44dp Squircle Avatar on the left -->
             <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/node_attachment_icon"
-                style="@style/KeepassDXStyle.Icon.Entry"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_attach_file_white_24dp" />
+                android:id="@+id/node_icon"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:scaleType="fitXY"
+                android:layout_gravity="top"
+                tools:src="@drawable/ic_blank_32dp" />
 
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/node_passkey_icon"
-                style="@style/KeepassDXStyle.Icon.Entry"
-                android:layout_width="wrap_content"
+            <!-- Vertical content column -->
+            <LinearLayout
+                android:id="@+id/node_content_column"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:padding="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/passkey"
-                android:src="@drawable/ic_passkey_white_24dp" />
+                android:layout_weight="1"
+                android:layout_marginStart="14dp"
+                android:orientation="vertical">
 
+                <!-- Header Row: Title & Badges on the left, Icons & Menu on the right -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:id="@+id/node_title_row"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/node_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorOnSurface"
+                            tools:text="account.jetbrains.com" />
+
+                        <!-- Badges -->
+                        <TextView
+                            android:id="@+id/node_badge_totp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/badge_totp_pill"
+                            android:paddingHorizontal="6dp"
+                            android:paddingVertical="1dp"
+                            android:text="2FA"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#10B981"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+
+                        <TextView
+                            android:id="@+id/node_badge_passkey"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:background="@drawable/badge_passkey_pill"
+                            android:paddingHorizontal="6dp"
+                            android:paddingVertical="1dp"
+                            android:text="Passkey"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#6366F1"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+                    </LinearLayout>
+
+                    <!-- Right Options: Passkey icon, Attachment icon, More (⋮) -->
+                    <LinearLayout
+                        android:id="@+id/node_right_options"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginStart="4dp">
+
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:id="@+id/node_attachment_icon"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginEnd="4dp"
+                            android:src="@drawable/ic_attach_file_white_24dp"
+                            app:tint="?attr/colorOnSurfaceVariant"
+                            android:visibility="gone" />
+
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:id="@+id/node_passkey_icon"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_marginEnd="4dp"
+                            android:padding="2dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@string/passkey"
+                            android:src="@drawable/ic_passkey_white_24dp"
+                            app:tint="#6366F1"
+                            android:visibility="gone" />
+
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:id="@+id/node_btn_menu"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:padding="4dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_more_vert_24dp"
+                            app:tint="?attr/colorOnSurfaceVariant"
+                            android:contentDescription="@string/options" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Subtitle / Username / Account -->
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/node_subtext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:lines="1"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:textSize="13sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="xhhuangchn@outlook.com" />
+
+                <!-- 2FAS Style Prominent OTP Display Area -->
+                <com.kunzisoft.keepass.view.OtpDisplayView
+                    android:id="@+id/node_otp_display"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <!-- Tags -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/node_tags_list_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:visibility="gone" />
+
+                <!-- Meta / UUID -->
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/node_meta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOutline"
+                    android:visibility="gone" />
+
+                <!-- Path -->
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/node_path"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textColor="?attr/colorOutline"
+                    android:visibility="gone" />
+
+            </LinearLayout>
         </LinearLayout>
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/node_path"
-            style="@style/KeepassDXStyle.Meta.Entry.Important"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="12dp"
-            android:layout_marginEnd="12dp"
-            android:layout_marginBottom="2dp"
-            android:maxLines="2"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/node_container_info"
-            app:layout_constraintTop_toBottomOf="@+id/node_container_info"
-            tools:text="Database / Group A / Group B" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

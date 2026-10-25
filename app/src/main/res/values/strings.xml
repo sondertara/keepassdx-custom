@@ -875,4 +875,5 @@
     <string name="passkey_view_details">Passkey Details</string>
     <string name="copy_credential_id">Copy Credential ID</string>
     <string name="credential_id_copied">Credential ID copied to clipboard</string>
+    <string name="copied_otp_token">Token copied</string>
 </resources>

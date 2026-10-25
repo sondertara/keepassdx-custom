@@ -391,6 +391,24 @@ class GroupViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
+    fun editSingleNode(node: SortedNodeInfo) {
+        viewModelScope.launch {
+            when (node) {
+                is GroupInfo -> _viewEvent.emit(GroupEvent.EditGroup(node))
+                is EntryInfo -> _viewEvent.emit(GroupEvent.EditEntry(node))
+            }
+        }
+    }
+
+    fun deleteSingleNode(node: SortedNodeInfo) {
+        viewModelScope.launch {
+            _viewEvent.emit(GroupEvent.DeleteNodes(DeleteActionState(
+                nodes = listOf(node).toNodes(),
+                isRecycleBin = false
+            )))
+        }
+    }
+
     fun onEditNodeClicked() {
         val nodes = _nodeActionState.value.selectedNodes
         if (nodes.isNotEmpty()) {

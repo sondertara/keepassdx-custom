@@ -86,6 +86,11 @@ class OtpDisplayView @JvmOverloads constructor(
                     value = token,
                     sensitive = true
                 )
+                android.widget.Toast.makeText(
+                    context,
+                    context.getString(R.string.copied_otp_token),
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
             } catch (e: Exception) {
                 Log.e(TAG, "Unable to copy the OTP token", e)
             }

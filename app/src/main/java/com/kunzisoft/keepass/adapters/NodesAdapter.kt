@@ -47,10 +47,12 @@ import com.kunzisoft.keepass.model.SortedEntryInfo
 import com.kunzisoft.keepass.model.SortedGroupInfo
 import com.kunzisoft.keepass.model.SortedNodeInfo
 import com.kunzisoft.keepass.settings.PreferencesUtil
+import com.kunzisoft.keepass.view.AvatarHelper
 import com.kunzisoft.keepass.view.OtpDisplayView
 import com.kunzisoft.keepass.view.setTextSize
 import com.kunzisoft.keepass.view.strikeOut
 import com.kunzisoft.keepass.view.underline
+import androidx.core.widget.ImageViewCompat
 
 /**
  * Create node list adapter.
@@ -385,6 +387,15 @@ class NodesAdapter(
             // OTP
             holder.otpDisplay?.setOtpModel(node.otpModel)
 
+            // Badges
+            val hasOtp = node.otpModel != null || node.tags.any {
+                it.label.equals("TOTP", ignoreCase = true) || it.label.equals("2FA", ignoreCase = true)
+            }
+            holder.badgeTotp?.visibility = if (hasOtp) View.VISIBLE else View.GONE
+
+            val hasPasskey = node.passkey != null
+            holder.badgePasskey?.visibility = if (hasPasskey) View.VISIBLE else View.GONE
+
             // Attachment
             holder.attachmentIcon?.visibility =
                 if (node.containsAttachment()) View.VISIBLE else View.GONE
@@ -399,6 +410,14 @@ class NodesAdapter(
             } else {
                 holder.passkeyIcon?.visibility = View.GONE
                 holder.passkeyIcon?.setOnClickListener(null)
+            }
+
+            // Unified 3-dots Menu Button (⋮)
+            holder.menuBtn?.apply {
+                visibility = View.VISIBLE
+                setOnClickListener { v ->
+                    mNodeClickCallback?.onNodeMenuClick(node, v)
+                }
             }
 
             // Assign colors
@@ -454,11 +473,24 @@ class NodesAdapter(
         // Assign image
         holder.imageIdentifier?.setColorFilter(iconColor)
         holder.icon.apply {
-            iconDrawableFactory.assignDatabaseIcon(this, node.icon, iconColor)
-            // Relative size of the icon
-            layoutParams?.apply {
-                height = (mIconDefaultDimension * mPrefSizeMultiplier).toInt()
-                width = (mIconDefaultDimension * mPrefSizeMultiplier).toInt()
+            if (node is EntryInfo) {
+                if (node.icon.customIconUUID != null) {
+                    iconDrawableFactory.assignDatabaseIcon(this, node.icon, iconColor)
+                } else {
+                    setImageDrawable(AvatarHelper.getAvatarDrawable(context, node.getVisualTitle()))
+                    ImageViewCompat.setImageTintList(this, null)
+                }
+                val entryIconDp = 44f * context.resources.displayMetrics.density
+                layoutParams?.apply {
+                    height = (entryIconDp * mPrefSizeMultiplier).toInt()
+                    width = (entryIconDp * mPrefSizeMultiplier).toInt()
+                }
+            } else {
+                iconDrawableFactory.assignDatabaseIcon(this, node.icon, iconColor)
+                layoutParams?.apply {
+                    height = (mIconDefaultDimension * mPrefSizeMultiplier).toInt()
+                    width = (mIconDefaultDimension * mPrefSizeMultiplier).toInt()
+                }
             }
         }
 
@@ -505,6 +537,7 @@ class NodesAdapter(
         fun onNodeClick(node: SortedNodeInfo)
         fun onNodeLongClick(node: SortedNodeInfo): Boolean
         fun onPasskeyClick(node: SortedNodeInfo, passkey: Passkey) {}
+        fun onNodeMenuClick(node: SortedNodeInfo, anchorView: View) {}
     }
 
     class NodeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -520,6 +553,9 @@ class NodesAdapter(
         var numberChildren: TextView? = itemView.findViewById(R.id.node_child_numbers)
         var attachmentIcon: ImageView? = itemView.findViewById(R.id.node_attachment_icon)
         var passkeyIcon: ImageView? = itemView.findViewById(R.id.node_passkey_icon)
+        var menuBtn: ImageView? = itemView.findViewById(R.id.node_btn_menu)
+        var badgeTotp: TextView? = itemView.findViewById(R.id.node_badge_totp)
+        var badgePasskey: TextView? = itemView.findViewById(R.id.node_badge_passkey)
     }
 
     companion object {

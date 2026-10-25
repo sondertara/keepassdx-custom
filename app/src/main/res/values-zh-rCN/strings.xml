@@ -838,4 +838,5 @@
     <string name="passkey_view_details">通行密钥详情</string>
     <string name="copy_credential_id">复制凭证 ID</string>
     <string name="credential_id_copied">凭证 ID 已复制到剪贴板</string>
+    <string name="copied_otp_token">动态口令已复制</string>
 </resources>

@@ -94,6 +94,9 @@ class GroupFragment : DatabaseFragment() {
                         PasskeyDetailsDialogFragment.newInstance(passkey)
                             .show(parentFragmentManager, PasskeyDetailsDialogFragment.TAG)
                     }
+                    override fun onNodeMenuClick(node: SortedNodeInfo, anchorView: View) {
+                        showNodePopupMenu(node, anchorView)
+                    }
                 })
                 setActionNodes(mGroupViewModel.actionsNodes.value)
             }
@@ -179,6 +182,26 @@ class GroupFragment : DatabaseFragment() {
                 }
             }
         }
+    }
+
+    private fun showNodePopupMenu(node: SortedNodeInfo, anchorView: View) {
+        val popup = androidx.appcompat.widget.PopupMenu(anchorView.context, anchorView)
+        popup.menu.add(0, 1, 0, R.string.menu_edit)
+        popup.menu.add(0, 2, 1, R.string.menu_delete)
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                1 -> {
+                    mGroupViewModel.editSingleNode(node)
+                    true
+                }
+                2 -> {
+                    mGroupViewModel.deleteSingleNode(node)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
     }
 
     override fun onResume() {
