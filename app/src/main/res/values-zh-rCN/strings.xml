@@ -301,6 +301,8 @@
     <string name="delete_entered_password_title">删除密码</string>
     <string name="delete_entered_password_summary">在尝试连接数据库后删除输入的密码</string>
     <string name="content_description_open_file">打开文件</string>
+    <string name="open_file">打开文件</string>
+    <string name="close">关闭</string>
     <string name="content_description_node_children">子节点</string>
     <string name="content_description_add_node">添加节点</string>
     <string name="content_description_add_entry">添加条目</string>

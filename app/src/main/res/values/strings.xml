@@ -50,6 +50,8 @@
     <string name="clipboard_otp_notifications_summary">Open a notification to copy the OTP from entries populated with autofill or magikeyboard</string>
     <string name="content_description_background">Background</string>
     <string name="content_description_open_file">Open file</string>
+    <string name="open_file">Open file</string>
+    <string name="close">Close</string>
     <string name="content_description_node_children">Node children</string>
     <string name="content_description_add_node">Add node</string>
     <string name="content_description_add_entry">Add entry</string>
