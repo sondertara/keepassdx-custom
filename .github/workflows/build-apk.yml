@@ -43,6 +43,7 @@ jobs:
 
       - name: Build APK (assembleLibreDebug)
         run: |
+          set -eo pipefail
           ./gradlew assembleLibreDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle_output.log
 
       - name: Extract Failure Summary
@@ -60,6 +61,11 @@ jobs:
           files: /tmp/gradle_output.log
           draft: false
           prerelease: true
+
+      - name: Debug Output Dir
+        run: |
+          echo "=== APK OUTPUT DIRECTORY CONTENT ==="
+          find app/build/outputs/ -type f || true
 
       - name: Upload Build Log on Failure
         if: failure()

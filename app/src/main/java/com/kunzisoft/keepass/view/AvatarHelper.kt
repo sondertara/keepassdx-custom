@@ -82,7 +82,7 @@ object AvatarHelper {
         val badgeText = extractBadgeText(title)
 
         // 3. Draw text
-        val isChinese = badgeText.any { it.code in 0x4E00..0x9FFF }
+        val isChinese = badgeText.any { it in '\u4E00'..'\u9FFF' }
         val textSizeSp = if (isChinese) 15f else if (badgeText.length > 2) 14f else 17f
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
@@ -122,7 +122,7 @@ object AvatarHelper {
 
         // Chinese character handling
         val firstChar = title.first()
-        if (firstChar.code in 0x4E00..0x9FFF) {
+        if (firstChar in '\u4E00'..'\u9FFF') {
             return title.take(2)
         }
 
