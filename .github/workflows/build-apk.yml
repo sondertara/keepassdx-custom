@@ -51,12 +51,12 @@ jobs:
         run: |
           tail -n 250 /tmp/gradle_output.log > /tmp/failure_summary.txt
 
-      - name: Create Failure Release (on tag)
-        if: failure() && startsWith(github.ref, 'refs/tags/')
+      - name: Create Failure Release
+        if: failure()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Build Failed ${{ github.ref_name }}
+          tag_name: build-failure
+          name: Build Failed Details
           body_path: /tmp/failure_summary.txt
           files: /tmp/gradle_output.log
           draft: false
