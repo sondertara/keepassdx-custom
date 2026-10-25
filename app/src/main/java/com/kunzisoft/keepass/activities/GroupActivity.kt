@@ -37,7 +37,18 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import android.graphics.BitmapFactory
+import android.widget.Toast
+import com.google.android.material.snackbar.Snackbar
+import com.kunzisoft.keepass.otp.scanner.OtpEntryQuickCreator
+import com.kunzisoft.keepass.otp.scanner.QrCodeDecoder
+import com.kunzisoft.keepass.otp.scanner.QrScanActivity
+import com.kunzisoft.keepass.timeout.TimeoutHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
@@ -181,6 +192,15 @@ class GroupActivity : DatabaseLockActivity() {
             loadGroup()
         } ?: Log.e(this.javaClass.name, "Entry cannot be retrieved in Activity Result")
     }
+
+    private val mScanOtpLauncher = QrScanActivity.registerForScanResult(this) { scanResult ->
+        scanResult?.let { handleScannedOtpResult(it) }
+    }
+
+    private val mPickImageOtpLauncher =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
+            uri?.let { decodeImageForOtp(it) }
+        }
 
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -793,6 +813,92 @@ class GroupActivity : DatabaseLockActivity() {
                 }
             }
         }
+        addNodeButtonView?.setScanOtpClickListener {
+            launchScanQrForOtp()
+        }
+        addNodeButtonView?.setPickImageOtpClickListener {
+            launchPickImageForOtp()
+        }
+    }
+
+    private fun launchScanQrForOtp() {
+        mDatabase?.let { database ->
+            if (database.loaded && !database.isReadOnly) {
+                if (TimeoutHelper.checkTimeAndLockIfTimeout(this)) {
+                    mScanOtpLauncher.launch(Intent(this, QrScanActivity::class.java))
+                }
+            }
+        }
+    }
+
+    private fun launchPickImageForOtp() {
+        mDatabase?.let { database ->
+            if (database.loaded && !database.isReadOnly) {
+                if (TimeoutHelper.checkTimeAndLockIfTimeout(this)) {
+                    mPickImageOtpLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
+            }
+        }
+    }
+
+    private fun decodeImageForOtp(uri: Uri) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                contentResolver.openInputStream(uri)?.use { stream ->
+                    val bitmap = BitmapFactory.decodeStream(stream)
+                    if (bitmap != null) {
+                        val text = QrCodeDecoder.decodeBitmap(bitmap, recycle = true)
+                        withContext(Dispatchers.Main) {
+                            if (text != null) {
+                                handleScannedOtpResult(text)
+                            } else {
+                                Toast.makeText(
+                                    this@GroupActivity,
+                                    R.string.qr_no_code_found,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(this@GroupActivity.javaClass.name, "Failed to decode image for OTP", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@GroupActivity,
+                        R.string.qr_no_code_found,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun handleScannedOtpResult(qrText: String) {
+        val parsedOtp = OtpEntryQuickCreator.parse(qrText)
+        if (parsedOtp == null) {
+            Toast.makeText(this, R.string.qr_invalid_otp, Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val database = mDatabase ?: return
+        val currentGroupId = mGroupViewModel.mainGroup?.nodeId ?: database.rootGroup?.nodeId ?: return
+
+        val newEntry = OtpEntryQuickCreator.createAndSaveEntry(
+            activity = this,
+            parentId = currentGroupId,
+            parsedOtp = parsedOtp
+        )
+
+        val successMsg = getString(R.string.otp_entry_created_success, parsedOtp.displayTitle)
+        val coordinator = findViewById<View>(R.id.group_coordinator) ?: findViewById<View>(android.R.id.content)
+        Snackbar.make(coordinator, successMsg, Snackbar.LENGTH_LONG)
+            .setAction(R.string.view) {
+                editEntry(database, newEntry.nodeId)
+            }
+            .show()
     }
 
     private fun createDatabaseBackupFile() {

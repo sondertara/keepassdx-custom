@@ -779,4 +779,12 @@
     <string name="error_load_database_KDF_iteration">KDF 迭代过高。</string>
     <string name="save_success">保存成功了</string>
     <string name="words">单词</string>
+    <string name="scan_qr_code">扫描 2FA 二维码</string>
+    <string name="scan_qr_hint">将二维码置于框内即可自动识别</string>
+    <string name="pick_image_qr">从图片识别 2FA</string>
+    <string name="scan_qr_camera_permission_required">扫描二维码需要摄像头权限</string>
+    <string name="qr_no_code_found">未能从该图片识别到二维码</string>
+    <string name="qr_invalid_otp">未能在二维码中找到有效的 2FA 密钥</string>
+    <string name="otp_entry_created_success">已成功添加 %1$s 的 2FA 验证码</string>
+    <string name="view">查看</string>
 </resources>

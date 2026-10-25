@@ -46,9 +46,15 @@ class AddNodeButtonView @JvmOverloads constructor(context: Context,
     private lateinit var fabAddEntryView: View
     private lateinit var addGroupView: View
     private lateinit var fabAddGroupView: View
+    private lateinit var scanOtpView: View
+    private lateinit var fabScanOtpView: View
+    private lateinit var pickImageOtpView: View
+    private lateinit var fabPickImageOtpView: View
 
     private var addEntryEnable: Boolean = false
     private var addGroupEnable: Boolean = false
+    private var scanOtpEnable: Boolean = false
+    private var pickImageOtpEnable: Boolean = false
 
     private var state: State? = null
     private var allowAction: Boolean = false
@@ -57,6 +63,8 @@ class AddNodeButtonView @JvmOverloads constructor(context: Context,
     private var viewButtonMenuAnimation: AddButtonAnimation? = null
     private var viewMenuAnimationAddEntry: ViewMenuAnimation? = null
     private var viewMenuAnimationAddGroup: ViewMenuAnimation? = null
+    private var viewMenuAnimationScanOtp: ViewMenuAnimation? = null
+    private var viewMenuAnimationPickImageOtp: ViewMenuAnimation? = null
     private var animationDuration: Long = 0
 
     val isEnable: Boolean
@@ -77,18 +85,26 @@ class AddNodeButtonView @JvmOverloads constructor(context: Context,
 
         addEntryEnable = true
         addGroupEnable = true
+        scanOtpEnable = true
+        pickImageOtpEnable = true
 
         addButtonView = findViewById(R.id.add_button)
         addEntryView = findViewById(R.id.container_add_entry)
         fabAddEntryView = findViewById(R.id.fab_add_entry)
         addGroupView = findViewById(R.id.container_add_group)
         fabAddGroupView = findViewById(R.id.fab_add_group)
+        scanOtpView = findViewById(R.id.container_scan_otp)
+        fabScanOtpView = findViewById(R.id.fab_scan_otp)
+        pickImageOtpView = findViewById(R.id.container_pick_image_otp)
+        fabPickImageOtpView = findViewById(R.id.fab_pick_image_otp)
 
         animationDuration = 300L
 
         viewButtonMenuAnimation = AddButtonAnimation(addButtonView)
-        viewMenuAnimationAddEntry = ViewMenuAnimation(addEntryView, 150L, 0L)
-        viewMenuAnimationAddGroup = ViewMenuAnimation(addGroupView, 0L, 150L)
+        viewMenuAnimationAddGroup = ViewMenuAnimation(addGroupView, 0L, 200L)
+        viewMenuAnimationAddEntry = ViewMenuAnimation(addEntryView, 75L, 125L)
+        viewMenuAnimationScanOtp = ViewMenuAnimation(scanOtpView, 150L, 50L)
+        viewMenuAnimationPickImageOtp = ViewMenuAnimation(pickImageOtpView, 225L, 0L)
 
         allowAction = true
         state = State.CLOSE
@@ -115,12 +131,19 @@ class AddNodeButtonView @JvmOverloads constructor(context: Context,
         val viewButtonRect = Rect()
         val viewEntryRect = Rect()
         val viewGroupRect = Rect()
+        val viewScanOtpRect = Rect()
+        val viewPickImageOtpRect = Rect()
         addButtonView?.getGlobalVisibleRect(viewButtonRect)
         addEntryView.getGlobalVisibleRect(viewEntryRect)
         addGroupView.getGlobalVisibleRect(viewGroupRect)
-        if (!(viewButtonRect.contains(event.rawX.toInt(), event.rawY.toInt())
-                        && viewEntryRect.contains(event.rawX.toInt(), event.rawY.toInt())
-                        && viewGroupRect.contains(event.rawX.toInt(), event.rawY.toInt()))) {
+        scanOtpView.getGlobalVisibleRect(viewScanOtpRect)
+        pickImageOtpView.getGlobalVisibleRect(viewPickImageOtpRect)
+        if (!viewButtonRect.contains(event.rawX.toInt(), event.rawY.toInt())
+            && !viewEntryRect.contains(event.rawX.toInt(), event.rawY.toInt())
+            && !viewGroupRect.contains(event.rawX.toInt(), event.rawY.toInt())
+            && !viewScanOtpRect.contains(event.rawX.toInt(), event.rawY.toInt())
+            && !viewPickImageOtpRect.contains(event.rawX.toInt(), event.rawY.toInt())
+        ) {
             closeButtonIfOpen()
         }
         return super.onTouchEvent(event)
@@ -187,7 +210,7 @@ class AddNodeButtonView @JvmOverloads constructor(context: Context,
     }
 
     private fun disableViewIfNoAddAvailable() {
-        visibility = if (!addEntryEnable && !addGroupEnable) {
+        visibility = if (!addEntryEnable && !addGroupEnable && !scanOtpEnable && !pickImageOtpEnable) {
             View.GONE
         } else {
             View.VISIBLE
@@ -212,6 +235,18 @@ class AddNodeButtonView @JvmOverloads constructor(context: Context,
         }
     }
 
+    fun setScanOtpClickListener(onClickListener: OnClickListener) {
+        if (scanOtpEnable) {
+            fabScanOtpView.setOnClickListener(onButtonClickListener(onClickListener))
+        }
+    }
+
+    fun setPickImageOtpClickListener(onClickListener: OnClickListener) {
+        if (pickImageOtpEnable) {
+            fabPickImageOtpView.setOnClickListener(onButtonClickListener(onClickListener))
+        }
+    }
+
     private fun startGlobalAnimation() {
         if (allowAction) {
             viewButtonMenuAnimation?.startAnimation()
@@ -221,6 +256,12 @@ class AddNodeButtonView @JvmOverloads constructor(context: Context,
             }
             if (addGroupEnable) {
                 viewMenuAnimationAddGroup?.startAnimation()
+            }
+            if (scanOtpEnable) {
+                viewMenuAnimationScanOtp?.startAnimation()
+            }
+            if (pickImageOtpEnable) {
+                viewMenuAnimationPickImageOtp?.startAnimation()
             }
         }
     }

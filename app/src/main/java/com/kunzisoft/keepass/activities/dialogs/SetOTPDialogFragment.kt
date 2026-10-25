@@ -47,6 +47,19 @@ import com.kunzisoft.keepass.otp.OtpElement.Companion.MIN_OTP_DIGITS
 import com.kunzisoft.keepass.otp.OtpElement.Companion.MIN_OTP_SECRET
 import com.kunzisoft.keepass.otp.OtpElement.Companion.MIN_TOTP_PERIOD
 import com.kunzisoft.keepass.otp.OtpTokenType
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
+import com.kunzisoft.keepass.otp.scanner.OtpEntryQuickCreator
+import com.kunzisoft.keepass.otp.scanner.QrCodeDecoder
+import com.kunzisoft.keepass.otp.scanner.QrScanActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.kunzisoft.keepass.otp.OtpType
 import com.kunzisoft.keepass.otp.TokenCalculator
 import com.kunzisoft.keepass.utils.AppUtil.isContributingUser
@@ -58,6 +71,61 @@ import java.util.Locale
 class SetOTPDialogFragment : DatabaseDialogFragment() {
 
     private val entryEditViewModel: EntryEditViewModel by activityViewModels()
+
+    private val mScanOtpLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            result.data?.getStringExtra(QrScanActivity.EXTRA_SCAN_RESULT)?.let { qrText ->
+                val parsed = OtpEntryQuickCreator.parse(qrText)
+                if (parsed != null) {
+                    applyParsedOtp(parsed)
+                } else {
+                    Toast.makeText(context, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private val mPickImageOtpLauncher =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
+            uri?.let { decodeImageForOtp(it) }
+        }
+
+    private fun decodeImageForOtp(uri: Uri) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                requireContext().contentResolver.openInputStream(uri)?.use { stream ->
+                    val bitmap = BitmapFactory.decodeStream(stream)
+                    if (bitmap != null) {
+                        val text = QrCodeDecoder.decodeBitmap(bitmap, recycle = true)
+                        withContext(Dispatchers.Main) {
+                            if (text != null) {
+                                val parsed = OtpEntryQuickCreator.parse(text)
+                                if (parsed != null) {
+                                    applyParsedOtp(parsed)
+                                } else {
+                                    Toast.makeText(context, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                Toast.makeText(context, R.string.qr_no_code_found, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, R.string.qr_no_code_found, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun applyParsedOtp(parsedOtp: OtpEntryQuickCreator.ParsedOtp) {
+        mOtpElement.clear()
+        mOtpElement = parsedOtp.otpElement
+        upgradeType()
+        upgradeTokenType()
+        upgradeParameters()
+    }
 
     private var mOtpElement: OtpElement = OtpElement()
 
@@ -152,6 +220,15 @@ class SetOTPDialogFragment : DatabaseDialogFragment() {
             otpCounterTextView = root?.findViewById(R.id.setup_otp_counter)
             otpDigitsContainer = root?.findViewById(R.id.setup_otp_digits_label)
             otpDigitsTextView = root?.findViewById(R.id.setup_otp_digits)
+
+            root?.findViewById<View>(R.id.button_scan_otp_dialog)?.setOnClickListener {
+                mScanOtpLauncher.launch(Intent(requireContext(), QrScanActivity::class.java))
+            }
+            root?.findViewById<View>(R.id.button_pick_image_dialog)?.setOnClickListener {
+                mPickImageOtpLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
 
             // To fix init element
             // With tab keyboard selection

@@ -49,6 +49,9 @@ class OtpProgressView @JvmOverloads constructor(
     private val otpCircularProgress: CircularProgressIndicator
     private val otpTextProgress: TextView
 
+    private var defaultProgressColor: Int = android.graphics.Color.GRAY
+    private val warningColor: Int = android.graphics.Color.parseColor("#E53935") // Material Red 600
+
     /**
      * Callback when the OTP is updated.
      */
@@ -114,13 +117,16 @@ class OtpProgressView @JvmOverloads constructor(
             }
             OtpType.TOTP -> {
                 val seconds = otpElement.secondsRemaining
+                val colorToUse = if (seconds <= 5) warningColor else defaultProgressColor
                 otpTextProgress.apply {
                     visibility = VISIBLE
                     text = seconds.toString()
+                    setTextColor(colorToUse)
                 }
                 otpCircularProgress.apply {
                     max = otpElement.period
                     setProgressCompat(seconds, true)
+                    setIndicatorColor(colorToUse)
                 }
             }
         }
@@ -132,8 +138,11 @@ class OtpProgressView @JvmOverloads constructor(
      * @param color The color to set.
      */
     fun setProgressColor(color: Int) {
-        otpTextProgress.setTextColor(color)
-        otpCircularProgress.setIndicatorColor(color)
+        defaultProgressColor = color
+        val seconds = otpElement?.secondsRemaining ?: 30
+        val colorToUse = if (seconds <= 5 && otpElement?.type == OtpType.TOTP) warningColor else color
+        otpTextProgress.setTextColor(colorToUse)
+        otpCircularProgress.setIndicatorColor(colorToUse)
     }
 
     override fun onAttachedToWindow() {

@@ -80,6 +80,7 @@ class OtpDisplayView @JvmOverloads constructor(
     fun copyTokenToClipboard() {
         otpElement?.token?.let { token ->
             try {
+                performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
                 context.copyToClipboard(
                     label = TemplateField.getLocalizedName(context, TemplateField.LABEL_TOKEN),
                     value = token,
@@ -175,6 +176,15 @@ class OtpDisplayView @JvmOverloads constructor(
         }
     }
 
+    private fun formatTokenWithSpacing(token: CharArray): String {
+        val str = String(token).trim()
+        return when (str.length) {
+            6 -> "${str.substring(0, 3)} ${str.substring(3)}"
+            8 -> "${str.substring(0, 4)} ${str.substring(4)}"
+            else -> str
+        }
+    }
+
     /**
      * Update the token view with the current OTP element.
      */
@@ -186,7 +196,8 @@ class OtpDisplayView @JvmOverloads constructor(
                 } else {
                     hideToken()
                 }
-                text = String(otpElement.tokenFormatted)
+                text = formatTokenWithSpacing(otpElement.tokenFormatted)
+                typeface = android.graphics.Typeface.MONOSPACE
                 setTextSize(
                     unit = TypedValue.COMPLEX_UNIT_PX,
                     defaultSize = mDefaultTextSize,

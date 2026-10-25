@@ -54,6 +54,32 @@
                 android:contentDescription="@string/content_description_otp_information"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_scan_otp_dialog"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                app:icon="@drawable/ic_qr_code_scanner_24dp"
+                android:text="@string/scan_qr_code" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_pick_image_dialog"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                app:icon="@drawable/ic_photo_library_white_24dp"
+                android:text="@string/pick_image_qr" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/setup_otp_type_message"
             android:layout_width="match_parent"
