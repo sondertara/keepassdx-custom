@@ -42,6 +42,7 @@ import com.kunzisoft.keepass.database.element.node.NodeType
 import com.kunzisoft.keepass.icons.IconDrawableFactory
 import com.kunzisoft.keepass.model.EntryInfo
 import com.kunzisoft.keepass.model.GroupInfo
+import com.kunzisoft.keepass.model.Passkey
 import com.kunzisoft.keepass.model.SortedEntryInfo
 import com.kunzisoft.keepass.model.SortedGroupInfo
 import com.kunzisoft.keepass.model.SortedNodeInfo
@@ -389,8 +390,16 @@ class NodesAdapter(
                 if (node.containsAttachment()) View.VISIBLE else View.GONE
 
             // Passkey
-            holder.passkeyIcon?.visibility =
-                if (node.passkey != null) View.VISIBLE else View.GONE
+            val passkey = node.passkey
+            if (passkey != null) {
+                holder.passkeyIcon?.visibility = View.VISIBLE
+                holder.passkeyIcon?.setOnClickListener {
+                    mNodeClickCallback?.onPasskeyClick(node, passkey)
+                }
+            } else {
+                holder.passkeyIcon?.visibility = View.GONE
+                holder.passkeyIcon?.setOnClickListener(null)
+            }
 
             // Assign colors
             assignBackgroundColor(holder.container, node)
@@ -495,6 +504,7 @@ class NodesAdapter(
     interface NodeClickCallback {
         fun onNodeClick(node: SortedNodeInfo)
         fun onNodeLongClick(node: SortedNodeInfo): Boolean
+        fun onPasskeyClick(node: SortedNodeInfo, passkey: Passkey) {}
     }
 
     class NodeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

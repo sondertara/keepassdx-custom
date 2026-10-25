@@ -35,10 +35,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.kunzisoft.keepass.R
+import com.kunzisoft.keepass.activities.dialogs.PasskeyDetailsDialogFragment
 import com.kunzisoft.keepass.adapters.EntryAttachmentsItemsAdapter
 import com.kunzisoft.keepass.database.ContextualDatabase
 import com.kunzisoft.keepass.model.EntryInfo
 import com.kunzisoft.keepass.model.FieldProtection
+import com.kunzisoft.keepass.model.PasskeyInfoHelper
 import com.kunzisoft.keepass.model.StreamDirection
 import com.kunzisoft.keepass.settings.PreferencesUtil
 import com.kunzisoft.keepass.utils.TimeUtil.getDateTimeString
@@ -58,6 +60,13 @@ class EntryFragment: DatabaseFragment() {
     private lateinit var rootView: View
     private lateinit var mainSection: View
     private lateinit var advancedSection: View
+
+    private var passkeyCardView: View? = null
+    private var txtPasskeyRp: TextView? = null
+    private var txtPasskeyUsername: TextView? = null
+    private var txtPasskeyAlgorithm: TextView? = null
+    private var txtPasskeyBackup: TextView? = null
+    private var btnPasskeyDetails: View? = null
 
     private lateinit var templateView: TemplateView
 
@@ -96,6 +105,13 @@ class EntryFragment: DatabaseFragment() {
 
         mainSection = view.findViewById(R.id.entry_section_main)
         advancedSection = view.findViewById(R.id.entry_section_advanced)
+
+        passkeyCardView = view.findViewById(R.id.entry_passkey_card)
+        txtPasskeyRp = view.findViewById(R.id.txt_passkey_card_rp)
+        txtPasskeyUsername = view.findViewById(R.id.txt_passkey_card_username)
+        txtPasskeyAlgorithm = view.findViewById(R.id.txt_passkey_card_algorithm)
+        txtPasskeyBackup = view.findViewById(R.id.txt_passkey_card_backup)
+        btnPasskeyDetails = view.findViewById(R.id.btn_passkey_card_details)
 
         templateView = view.findViewById(R.id.entry_template)
 
@@ -219,6 +235,30 @@ class EntryFragment: DatabaseFragment() {
 
         // Populate entry views
         templateView.setEntryInfo(entryInfo)
+
+        // Assign passkey card
+        val passkey = entryInfo.passkey
+        if (passkey != null) {
+            passkeyCardView?.isVisible = true
+            txtPasskeyRp?.text = PasskeyInfoHelper.normalizeRelyingParty(passkey.relyingParty)
+            txtPasskeyUsername?.text = passkey.username.ifEmpty { "(No username)" }
+            txtPasskeyAlgorithm?.text = PasskeyInfoHelper.getAlgorithmName(passkey)
+            txtPasskeyBackup?.text = if (passkey.backupEligibility == true) {
+                if (passkey.backupState == true) {
+                    getString(R.string.passkey_backup_synced)
+                } else {
+                    getString(R.string.passkey_backup_eligibility)
+                }
+            } else {
+                getString(R.string.passkey_backup_single_device)
+            }
+            btnPasskeyDetails?.setOnClickListener {
+                PasskeyDetailsDialogFragment.newInstance(passkey)
+                    .show(parentFragmentManager, PasskeyDetailsDialogFragment.TAG)
+            }
+        } else {
+            passkeyCardView?.isVisible = false
+        }
 
         // Assign attachments
         val attachments = entryInfo.attachments

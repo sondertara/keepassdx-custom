@@ -821,4 +821,16 @@
     <string name="filter_passkeys">通行密钥</string>
     <string name="filter_totp">2FA 验证码</string>
     <string name="filter_favorites">常用收藏</string>
+    <string name="passkey_card_title">通行密钥 (FIDO2 / WebAuthn)</string>
+    <string name="passkey_relying_party_label">网站 / 依赖方</string>
+    <string name="passkey_username_label">绑定用户名</string>
+    <string name="passkey_algorithm_label">加密算法</string>
+    <string name="passkey_credential_id_label">凭证 ID 指纹</string>
+    <string name="passkey_user_handle_label">用户句柄</string>
+    <string name="passkey_backup_synced">多设备同步 (Synced)</string>
+    <string name="passkey_backup_single_device">单设备绑定 (Single-device)</string>
+    <string name="passkey_prf_supported">支持 PRF 密钥衍生加密</string>
+    <string name="passkey_view_details">通行密钥详情</string>
+    <string name="copy_credential_id">复制凭证 ID</string>
+    <string name="credential_id_copied">凭证 ID 已复制到剪贴板</string>
 </resources>

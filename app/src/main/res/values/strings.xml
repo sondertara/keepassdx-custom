@@ -858,4 +858,16 @@
     <string name="filter_passkeys">Passkeys</string>
     <string name="filter_totp">2FA Tokens</string>
     <string name="filter_favorites">Favorites</string>
+    <string name="passkey_card_title">Passkey (FIDO2 / WebAuthn)</string>
+    <string name="passkey_relying_party_label">Website / Relying Party</string>
+    <string name="passkey_username_label">Username</string>
+    <string name="passkey_algorithm_label">Algorithm</string>
+    <string name="passkey_credential_id_label">Credential ID</string>
+    <string name="passkey_user_handle_label">User Handle</string>
+    <string name="passkey_backup_synced">Synced Passkey (Multi-device)</string>
+    <string name="passkey_backup_single_device">Single Device / Hardware</string>
+    <string name="passkey_prf_supported">PRF Encryption Extension Supported</string>
+    <string name="passkey_view_details">Passkey Details</string>
+    <string name="copy_credential_id">Copy Credential ID</string>
+    <string name="credential_id_copied">Credential ID copied to clipboard</string>
 </resources>

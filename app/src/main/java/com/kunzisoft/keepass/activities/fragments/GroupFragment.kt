@@ -32,11 +32,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.kunzisoft.keepass.R
+import com.kunzisoft.keepass.activities.dialogs.PasskeyDetailsDialogFragment
 import com.kunzisoft.keepass.adapters.NodesAdapter
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.retrieveSpecialMode
 import com.kunzisoft.keepass.credentialprovider.SpecialMode
 import com.kunzisoft.keepass.database.ContextualDatabase
 import com.kunzisoft.keepass.database.element.SortNodeEnum
+import com.kunzisoft.keepass.model.Passkey
 import com.kunzisoft.keepass.model.SearchGroupInfo
 import com.kunzisoft.keepass.model.SortedNodeInfo
 import com.kunzisoft.keepass.model.VaultCategory
@@ -87,6 +89,10 @@ class GroupFragment : DatabaseFragment() {
                     override fun onNodeLongClick(node: SortedNodeInfo): Boolean {
                         mGroupViewModel.performLongNodeClick(node)
                         return true
+                    }
+                    override fun onPasskeyClick(node: SortedNodeInfo, passkey: Passkey) {
+                        PasskeyDetailsDialogFragment.newInstance(passkey)
+                            .show(parentFragmentManager, PasskeyDetailsDialogFragment.TAG)
                     }
                 })
                 setActionNodes(mGroupViewModel.actionsNodes.value)
