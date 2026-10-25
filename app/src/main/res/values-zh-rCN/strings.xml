@@ -801,6 +801,7 @@
     <string name="import_source_google_auth">Google Authenticator (TXT)</string>
     <string name="import_choose_file">选择文件</string>
     <string name="import_preview_title">数据解析预览</string>
+    <string name="import_detected_format">已识别来源格式：%1$s</string>
     <string name="import_total_entries">密码条目总数：%1$d</string>
     <string name="import_totp_entries">含 2FA / TOTP 条目：%1$d</string>
     <string name="import_folders_count">分组 / 文件夹层级：%1$d</string>

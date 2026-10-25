@@ -103,4 +103,46 @@ class BitwardenJsonImporterTest {
         assertEquals("Server SSH Notes", noteEntry.title)
         assertTrue(noteEntry.notes.contains("ssh-ed25519"))
     }
+
+    @Test
+    fun testBitwardenWithNullTotpAndNullNotes() {
+        val json = """
+        {
+          "encrypted": false,
+          "folders": [],
+          "items": [
+            {
+              "id": "item-plain",
+              "organizationId": null,
+              "folderId": null,
+              "type": 1,
+              "name": "Normal Website",
+              "notes": null,
+              "favorite": false,
+              "login": {
+                "uris": null,
+                "username": "normal_user",
+                "password": "normal_password",
+                "totp": null
+              }
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val importer = BitwardenJsonImporter()
+        val result = importer.parse(ByteArrayInputStream(json.toByteArray(StandardCharsets.UTF_8)))
+
+        assertEquals(1, result.totalEntriesCount)
+        assertEquals(0, result.totpEntriesCount)
+        assertEquals(1, result.rootEntries.size)
+
+        val entry = result.rootEntries[0]
+        assertEquals("Normal Website", entry.title)
+        assertEquals("normal_user", entry.username)
+        assertEquals("normal_password", String(entry.password))
+        assertEquals("", entry.notes)
+        org.junit.Assert.assertNull(entry.totpUriOrSecret)
+        org.junit.Assert.assertFalse(entry.tags.contains("TOTP"))
+    }
 }

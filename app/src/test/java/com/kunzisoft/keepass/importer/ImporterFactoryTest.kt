@@ -65,6 +65,20 @@ class ImporterFactoryTest {
     }
 
     @Test
+    fun testDetectGooglePasswordsCsvWithBomAndChineseFileName() {
+        val csv = "\uFEFFname,url,username,password,note\nGoogle,https://google.com,user,pass,note"
+        val importer = ImporterFactory.detectImporter("Google 密码.csv", csv)
+        assertTrue(importer is ChromeCsvImporter)
+    }
+
+    @Test
+    fun testDetectGooglePasswordsCsvWithChineseHeaders() {
+        val csv = "名称,网址,用户名,密码,备注\nGoogle,https://google.com,user,pass,note"
+        val importer = ImporterFactory.detectImporter("密码导出.csv", csv)
+        assertTrue(importer is ChromeCsvImporter)
+    }
+
+    @Test
     fun testDetectOnePasswordCsv() {
         val csv = "Title,Type,Username,Password,Website,Notes\nDropbox,Login,user,pass,https://dropbox.com,note"
         val importer = ImporterFactory.detectImporter("1password.csv", csv)

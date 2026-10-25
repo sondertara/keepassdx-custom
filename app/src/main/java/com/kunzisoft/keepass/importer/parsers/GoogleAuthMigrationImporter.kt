@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets
 class GoogleAuthMigrationImporter : VaultImporter {
 
     override val id: String = "google_auth_migration"
-    override val displayName: String = "Google Authenticator (Migration / TXT)"
+    override val displayName: String = "Google Authenticator (2FA 迁移协议)"
     override val supportedExtensions: List<String> = listOf("txt", "data")
 
     override fun parse(inputStream: InputStream): ImportBatchResult {

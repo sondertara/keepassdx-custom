@@ -43,14 +43,14 @@ open class GenericCsvImporter(
             return result
         }
 
-        val headers = records[0].map { it.trim().lowercase(Locale.US) }
-        val titleIdx = findHeaderIndex(headers, listOf("title", "name", "account", "label", "website name"))
-        val usernameIdx = findHeaderIndex(headers, listOf("username", "user", "login", "email", "login name", "account name"))
-        val passwordIdx = findHeaderIndex(headers, listOf("password", "pass", "login password"))
-        val urlIdx = findHeaderIndex(headers, listOf("url", "website", "web", "uri", "login url", "site"))
-        val notesIdx = findHeaderIndex(headers, listOf("notes", "note", "comment", "comments", "extra"))
-        val groupIdx = findHeaderIndex(headers, listOf("group", "folder", "category", "group path"))
-        val totpIdx = findHeaderIndex(headers, listOf("totp", "otp", "one-time password", "otpauth", "verification code", "2fa"))
+        val headers = records[0].map { it.trim().lowercase(Locale.ROOT).removePrefix("\uFEFF") }
+        val titleIdx = findHeaderIndex(headers, listOf("title", "name", "account", "label", "website name", "名称", "标题", "账号名称", "网站名称", "应用名称"))
+        val usernameIdx = findHeaderIndex(headers, listOf("username", "user", "login", "email", "login name", "account name", "用户名", "账号", "账户", "邮箱", "登录名", "用户"))
+        val passwordIdx = findHeaderIndex(headers, listOf("password", "pass", "login password", "密码", "口令", "登录密码"))
+        val urlIdx = findHeaderIndex(headers, listOf("url", "website", "web", "uri", "login url", "site", "网址", "网站", "链接", "网页", "域名"))
+        val notesIdx = findHeaderIndex(headers, listOf("notes", "note", "comment", "comments", "extra", "备注", "附注", "说明", "注释"))
+        val groupIdx = findHeaderIndex(headers, listOf("group", "folder", "category", "group path", "分组", "文件夹", "分类", "目录"))
+        val totpIdx = findHeaderIndex(headers, listOf("totp", "otp", "one-time password", "otpauth", "verification code", "2fa", "验证码", "双重验证", "两步验证", "动态口令"))
 
         val groupMap = mutableMapOf<String, ImportedGroup>()
 
@@ -72,7 +72,12 @@ open class GenericCsvImporter(
                 password = password.toCharArray(),
                 url = url,
                 notes = notes,
-                totpUriOrSecret = totp.takeIf { it.isNotEmpty() },
+                totpUriOrSecret = totp.takeIf {
+                    it.isNotBlank()
+                        && !it.equals("null", ignoreCase = true)
+                        && !it.equals("none", ignoreCase = true)
+                        && (it.startsWith("otpauth://", ignoreCase = true) || it.replace(" ", "").length >= 8)
+                },
                 folderPath = groupName.takeIf { it.isNotEmpty() }
             )
 

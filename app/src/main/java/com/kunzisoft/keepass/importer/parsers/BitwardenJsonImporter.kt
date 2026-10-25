@@ -52,9 +52,9 @@ class BitwardenJsonImporter : VaultImporter {
             val foldersArray = root.getJSONArray("folders")
             for (i in 0 until foldersArray.length()) {
                 val folderObj = foldersArray.getJSONObject(i)
-                val fId = folderObj.optString("id")
-                val fName = folderObj.optString("name").ifEmpty { "Folder $i" }
-                if (fId.isNotEmpty()) {
+                val fId = folderObj.optStringOrNull("id")
+                val fName = folderObj.optStringSafe("name", "Folder $i")
+                if (!fId.isNullOrEmpty()) {
                     val group = ImportedGroup(name = fName)
                     folderMap[fId] = group
                     result.groups.add(group)
@@ -68,28 +68,33 @@ class BitwardenJsonImporter : VaultImporter {
             for (i in 0 until itemsArray.length()) {
                 val itemObj = itemsArray.getJSONObject(i)
                 val type = itemObj.optInt("type", 1) // 1: Login, 2: Note, 3: Card, 4: Identity
-                val name = itemObj.optString("name")
-                val notes = itemObj.optString("notes")
-                val folderId = itemObj.optString("folderId", "")
+                val name = itemObj.optStringSafe("name", "")
+                val notes = itemObj.optStringSafe("notes", "")
+                val folderId = itemObj.optStringSafe("folderId", "")
+                val isFavorite = itemObj.optBoolean("favorite", false)
 
                 val entry = ImportedEntry(
                     title = name,
                     notes = notes
                 )
 
+                if (isFavorite) {
+                    entry.tags.add("Favorite")
+                }
+
                 when (type) {
                     1 -> { // Login
                         if (itemObj.has("login")) {
                             val loginObj = itemObj.getJSONObject("login")
-                            entry.username = loginObj.optString("username")
-                            entry.password = loginObj.optString("password").toCharArray()
+                            entry.username = loginObj.optStringSafe("username", "")
+                            entry.password = loginObj.optStringSafe("password", "").toCharArray()
 
                             // URIs
                             if (loginObj.has("uris")) {
                                 val urisArray = loginObj.getJSONArray("uris")
                                 for (u in 0 until urisArray.length()) {
                                     val uObj = urisArray.getJSONObject(u)
-                                    val uri = uObj.optString("uri")
+                                    val uri = uObj.optStringSafe("uri", "")
                                     if (uri.isNotEmpty()) {
                                         if (entry.url.isEmpty()) {
                                             entry.url = uri
@@ -101,9 +106,30 @@ class BitwardenJsonImporter : VaultImporter {
                             }
 
                             // TOTP
-                            val totp = loginObj.optString("totp", "")
-                            if (totp.isNotEmpty()) {
-                                entry.totpUriOrSecret = totp
+                            val totp = loginObj.optStringOrNull("totp")
+                            if (!totp.isNullOrBlank()
+                                && !totp.equals("null", ignoreCase = true)
+                                && !totp.equals("none", ignoreCase = true)
+                                && (totp.startsWith("otpauth://", ignoreCase = true) || totp.replace(" ", "").length >= 8)
+                            ) {
+                                entry.totpUriOrSecret = totp.trim()
+                            }
+
+                            // FIDO2 / Passkey credentials
+                            if (loginObj.has("fido2Credentials")) {
+                                val fidoArray = loginObj.getJSONArray("fido2Credentials")
+                                if (fidoArray.length() > 0) {
+                                    entry.tags.add("Passkey")
+                                    val fidoObj = fidoArray.getJSONObject(0)
+                                    val rpId = fidoObj.optStringOrNull("rpId") ?: ""
+                                    val credId = fidoObj.optStringOrNull("credentialId") ?: ""
+                                    if (rpId.isNotEmpty()) {
+                                        entry.customFields["Passkey"] = Pair(rpId, false)
+                                    }
+                                    if (credId.isNotEmpty()) {
+                                        entry.customFields["CredentialId"] = Pair(credId, false)
+                                    }
+                                }
                             }
                         }
                     }
@@ -114,19 +140,19 @@ class BitwardenJsonImporter : VaultImporter {
                         entry.tags.add("Credit Card")
                         if (itemObj.has("card")) {
                             val cardObj = itemObj.getJSONObject("card")
-                            cardObj.optString("cardholderName").takeIf { it.isNotEmpty() }?.let {
+                            cardObj.optStringOrNull("cardholderName")?.let {
                                 entry.customFields["Cardholder"] = Pair(it, false)
                             }
-                            cardObj.optString("number").takeIf { it.isNotEmpty() }?.let {
+                            cardObj.optStringOrNull("number")?.let {
                                 entry.customFields["CardNumber"] = Pair(it, true)
                             }
-                            cardObj.optString("expMonth").takeIf { it.isNotEmpty() }?.let {
+                            cardObj.optStringOrNull("expMonth")?.let {
                                 entry.customFields["ExpMonth"] = Pair(it, false)
                             }
-                            cardObj.optString("expYear").takeIf { it.isNotEmpty() }?.let {
+                            cardObj.optStringOrNull("expYear")?.let {
                                 entry.customFields["ExpYear"] = Pair(it, false)
                             }
-                            cardObj.optString("code").takeIf { it.isNotEmpty() }?.let {
+                            cardObj.optStringOrNull("code")?.let {
                                 entry.customFields["CVV"] = Pair(it, true)
                             }
                         }
@@ -138,10 +164,10 @@ class BitwardenJsonImporter : VaultImporter {
                     val fieldsArray = itemObj.getJSONArray("fields")
                     for (f in 0 until fieldsArray.length()) {
                         val fObj = fieldsArray.getJSONObject(f)
-                        val fName = fObj.optString("name")
-                        val fVal = fObj.optString("value")
+                        val fName = fObj.optStringOrNull("name")
+                        val fVal = fObj.optStringOrNull("value")
                         val fType = fObj.optInt("type", 0) // 1 is hidden/protected
-                        if (fName.isNotEmpty() && fVal.isNotEmpty()) {
+                        if (!fName.isNullOrEmpty() && !fVal.isNullOrEmpty()) {
                             entry.customFields[fName] = Pair(fVal, fType == 1)
                         }
                     }

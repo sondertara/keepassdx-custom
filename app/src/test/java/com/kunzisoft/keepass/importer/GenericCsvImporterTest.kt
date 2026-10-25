@@ -81,4 +81,48 @@ class GenericCsvImporterTest {
         assertEquals("p@ssword!", String(entry.password))
         assertEquals("dropbox.com", entry.url)
     }
+
+    @Test
+    fun testGoogleChromeStandardCsvWithBom() {
+        val csv = "\uFEFFname,url,username,password,note\n" +
+                "Google Account,https://accounts.google.com,user@gmail.com,secret123,my note\n" +
+                "GitHub,https://github.com/login,octocat,ghp_pat,"
+
+        val importer = GenericCsvImporter()
+        val result = importer.parse(ByteArrayInputStream(csv.toByteArray(StandardCharsets.UTF_8)))
+
+        assertEquals(2, result.totalEntriesCount)
+        assertEquals(0, result.totpEntriesCount)
+        assertEquals(2, result.rootEntries.size)
+
+        val entry1 = result.rootEntries[0]
+        assertEquals("Google Account", entry1.title)
+        assertEquals("https://accounts.google.com", entry1.url)
+        assertEquals("user@gmail.com", entry1.username)
+        assertEquals("secret123", String(entry1.password))
+        assertEquals("my note", entry1.notes)
+
+        val entry2 = result.rootEntries[1]
+        assertEquals("GitHub", entry2.title)
+        assertEquals("octocat", entry2.username)
+        assertEquals("ghp_pat", String(entry2.password))
+        assertEquals("", entry2.notes)
+    }
+
+    @Test
+    fun testChineseHeadersCsv() {
+        val csv = "名称,网址,用户名,密码,备注\n" +
+                "哔哩哔哩,https://www.bilibili.com,bili_user,bili_pass,视频网站"
+
+        val importer = GenericCsvImporter()
+        val result = importer.parse(ByteArrayInputStream(csv.toByteArray(StandardCharsets.UTF_8)))
+
+        assertEquals(1, result.totalEntriesCount)
+        val entry = result.rootEntries[0]
+        assertEquals("哔哩哔哩", entry.title)
+        assertEquals("https://www.bilibili.com", entry.url)
+        assertEquals("bili_user", entry.username)
+        assertEquals("bili_pass", String(entry.password))
+        assertEquals("视频网站", entry.notes)
+    }
 }

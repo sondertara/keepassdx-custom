@@ -86,8 +86,13 @@ data class ImportedEntry(
             }
 
             // Setup OTP if present
-            this@ImportedEntry.totpUriOrSecret?.let { totpStr ->
-                if (totpStr.isNotEmpty()) {
+            this@ImportedEntry.totpUriOrSecret?.let { rawTotp ->
+                val totpStr = rawTotp.trim()
+                if (totpStr.isNotEmpty()
+                    && !totpStr.equals("null", ignoreCase = true)
+                    && !totpStr.equals("none", ignoreCase = true)
+                    && (totpStr.startsWith("otpauth://", ignoreCase = true) || totpStr.replace(" ", "").length >= 8)
+                ) {
                     val formatted = if (totpStr.startsWith("otpauth://", ignoreCase = true)) {
                         totpStr
                     } else {

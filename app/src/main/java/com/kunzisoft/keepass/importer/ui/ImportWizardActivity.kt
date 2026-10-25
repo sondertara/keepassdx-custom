@@ -71,6 +71,7 @@ class ImportWizardActivity : DatabaseLockActivity() {
     private lateinit var btnSelectFile: MaterialButton
     private lateinit var txtSelectedFileName: TextView
     private lateinit var cardPreview: MaterialCardView
+    private lateinit var txtPreviewFormatName: TextView
     private lateinit var txtPreviewTotalEntries: TextView
     private lateinit var txtPreviewTotpEntries: TextView
     private lateinit var txtPreviewGroupsCount: TextView
@@ -109,6 +110,7 @@ class ImportWizardActivity : DatabaseLockActivity() {
         btnSelectFile = findViewById(R.id.btn_select_file)
         txtSelectedFileName = findViewById(R.id.txt_selected_file_name)
         cardPreview = findViewById(R.id.card_import_preview)
+        txtPreviewFormatName = findViewById(R.id.txt_preview_format_name)
         txtPreviewTotalEntries = findViewById(R.id.txt_preview_total_entries)
         txtPreviewTotpEntries = findViewById(R.id.txt_preview_totp_entries)
         txtPreviewGroupsCount = findViewById(R.id.txt_preview_groups_count)
@@ -199,6 +201,7 @@ class ImportWizardActivity : DatabaseLockActivity() {
     private fun displayPreviewResult(result: ImportBatchResult) {
         parsedBatchResult = result
 
+        txtPreviewFormatName.text = getString(R.string.import_detected_format, result.sourceName)
         txtPreviewTotalEntries.text = getString(R.string.import_total_entries, result.totalEntriesCount)
         txtPreviewTotpEntries.text = getString(R.string.import_totp_entries, result.totpEntriesCount)
         txtPreviewGroupsCount.text = getString(R.string.import_folders_count, result.groups.size)

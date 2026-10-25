@@ -74,10 +74,10 @@ class ProtonPassJsonImporter : VaultImporter {
             val metadataObj = dataObj.optJSONObject("metadata")
             val contentObj = dataObj.optJSONObject("content")
 
-            val title = metadataObj?.optString("name")
-                ?: itemObj.optString("name")
-            val notes = metadataObj?.optString("note")
-                ?: itemObj.optString("note")
+            val title = metadataObj?.optStringOrNull("name")
+                ?: itemObj.optStringSafe("name", "")
+            val notes = metadataObj?.optStringOrNull("note")
+                ?: itemObj.optStringSafe("note", "")
 
             val entry = ImportedEntry(
                 title = title,
@@ -85,15 +85,15 @@ class ProtonPassJsonImporter : VaultImporter {
             )
 
             if (contentObj != null) {
-                entry.username = contentObj.optString("username")
-                entry.password = contentObj.optString("password").toCharArray()
+                entry.username = contentObj.optStringSafe("username", "")
+                entry.password = contentObj.optStringSafe("password", "").toCharArray()
 
                 // URLs
                 if (contentObj.has("urls")) {
                     val urlsArr = contentObj.getJSONArray("urls")
                     for (u in 0 until urlsArr.length()) {
-                        val urlStr = urlsArr.getString(u)
-                        if (urlStr.isNotEmpty()) {
+                        val urlStr = urlsArr.optString(u)
+                        if (urlStr.isNotEmpty() && !urlStr.equals("null", ignoreCase = true)) {
                             if (entry.url.isEmpty()) {
                                 entry.url = urlStr
                             } else {
@@ -104,9 +104,13 @@ class ProtonPassJsonImporter : VaultImporter {
                 }
 
                 // TOTP
-                val totp = contentObj.optString("totpUri")
-                if (totp.isNotEmpty()) {
-                    entry.totpUriOrSecret = totp
+                val totp = contentObj.optStringOrNull("totpUri")
+                if (!totp.isNullOrBlank()
+                    && !totp.equals("null", ignoreCase = true)
+                    && !totp.equals("none", ignoreCase = true)
+                    && (totp.startsWith("otpauth://", ignoreCase = true) || totp.replace(" ", "").length >= 8)
+                ) {
+                    entry.totpUriOrSecret = totp.trim()
                 }
             }
 

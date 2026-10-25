@@ -51,8 +51,9 @@ object ImporterFactory {
      * Detect the most appropriate importer based on filename and preview of the first few bytes/lines.
      */
     fun detectImporter(fileName: String, previewText: String): VaultImporter {
-        val lowerName = fileName.lowercase(Locale.US)
-        val lowerPreview = previewText.lowercase(Locale.US).trim()
+        val lowerName = fileName.lowercase(Locale.ROOT)
+        val cleanPreview = previewText.removePrefix("\uFEFF").trim()
+        val lowerPreview = cleanPreview.lowercase(Locale.ROOT)
 
         // 1. Google Authenticator Migration check
         if (lowerPreview.contains(GoogleAuthMigrationDecoder.SCHEME_PREFIX)) {
@@ -60,7 +61,7 @@ object ImporterFactory {
         }
 
         // 2. JSON check
-        if (lowerName.endsWith(".json") || lowerPreview.startsWith("{")) {
+        if (lowerName.endsWith(".json") || cleanPreview.startsWith("{")) {
             if (lowerPreview.contains("\"folders\"") || lowerPreview.contains("\"items\"") || lowerPreview.contains("\"bitwarden\"")) {
                 return BitwardenJsonImporter()
             }
@@ -72,13 +73,25 @@ object ImporterFactory {
         }
 
         // 3. CSV check
-        val firstLine = previewText.lineSequence().firstOrNull()?.lowercase(Locale.US) ?: ""
+        val firstLine = cleanPreview.lineSequence().firstOrNull()?.trim()?.lowercase(Locale.ROOT) ?: ""
 
-        if (firstLine.contains("chrome") || (firstLine.startsWith("name,url,username,password"))) {
+        // Google Chrome / Google Password Manager / Chromium
+        if (firstLine.contains("name,url,username,password")
+            || firstLine.contains("名称,网址,用户名,密码")
+            || firstLine.contains("chrome")
+            || lowerName.contains("chrome")
+            || lowerName.contains("google")
+            || ((lowerName.contains("password") || lowerName.contains("密码")) && firstLine.contains("name,url"))
+        ) {
             return ChromeCsvImporter()
         }
 
-        if (firstLine.contains("1password") || firstLine.contains("type,title,notes") || firstLine.contains("fields,")) {
+        // 1Password
+        if (firstLine.contains("1password")
+            || firstLine.contains("type,title,notes")
+            || firstLine.contains("fields,")
+            || lowerName.contains("1password")
+        ) {
             return OnePasswordCsvImporter()
         }
 

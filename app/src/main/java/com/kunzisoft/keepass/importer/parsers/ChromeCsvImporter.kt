@@ -24,5 +24,5 @@ package com.kunzisoft.keepass.importer.parsers
  */
 class ChromeCsvImporter : GenericCsvImporter(
     id = "chrome_csv",
-    displayName = "Google Chrome / Edge (CSV)"
+    displayName = "Google 密码 / Chrome / Edge (CSV)"
 )
