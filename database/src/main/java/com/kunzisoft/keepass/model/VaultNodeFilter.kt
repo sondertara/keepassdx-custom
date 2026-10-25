@@ -67,13 +67,13 @@ object VaultNodeFilter {
         return entry.passkey != null
                 || entry.containsCustomField(PasskeyEntryFields.FIELD_USERNAME)
                 || entry.tags.contains(PasskeyEntryFields.PASSKEY_TAG)
-                || entry.tags.any { it.equals("passkey", ignoreCase = true) }
+                || entry.tags.toStringList().any { it.equals("passkey", ignoreCase = true) }
     }
 
     fun isTotpEntry(entry: EntryInfo): Boolean {
         return entry.otpModel != null
                 || entry.tags.contains(OtpEntryFields.OTP_TAG)
-                || entry.tags.any {
+                || entry.tags.toStringList().any {
                     it.equals("otp", ignoreCase = true)
                             || it.equals("2fa", ignoreCase = true)
                             || it.equals("totp", ignoreCase = true)
@@ -81,7 +81,7 @@ object VaultNodeFilter {
     }
 
     fun isFavoriteEntry(entry: EntryInfo): Boolean {
-        return entry.tags.any { tag ->
+        return entry.tags.toStringList().any { tag ->
             val lower = tag.lowercase(Locale.ROOT)
             lower == "favorite" || lower == "favourites" || lower == "常用" || lower == "收藏" || lower == "星标"
         }
