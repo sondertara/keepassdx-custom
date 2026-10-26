@@ -545,6 +545,16 @@ class GroupActivity : DatabaseLockActivity() {
                     }
                 }
                 launch {
+                    mGroupViewModel.isFlatView.collect {
+                        updateBreadcrumbVisibility()
+                    }
+                }
+                launch {
+                    mGroupViewModel.vaultCategory.collect {
+                        updateBreadcrumbVisibility()
+                    }
+                }
+                launch {
                     mGroupViewModel.groupUIState
                         .mapNotNull { it.breadcrumbs }
                         .distinctUntilChanged()
@@ -552,19 +562,8 @@ class GroupActivity : DatabaseLockActivity() {
                             // Show BreadCrumbs
                             mBreadcrumbAdapter?.setNode(breadcrumbs)
                             breadcrumbListView?.scrollToPosition(breadcrumbs.size -1)
+                            updateBreadcrumbVisibility()
                         }
-                }
-                launch {
-                    combine(
-                        mGroupViewModel.isFlatView,
-                        mGroupViewModel.vaultCategory,
-                        mGroupViewModel.groupUIState
-                    ) { isFlat: Boolean, category: VaultCategory, uiState: GroupViewModel.GroupUIState ->
-                        val breadcrumbCount = uiState.breadcrumbs?.size ?: 0
-                        isFlat || category != VaultCategory.ALL || breadcrumbCount <= 1
-                    }.distinctUntilChanged().collect { shouldHideBreadcrumb ->
-                        breadcrumbListView?.visibility = if (shouldHideBreadcrumb) View.GONE else View.VISIBLE
-                    }
                 }
                 launch {
                     mGroupViewModel.groupUIState
@@ -851,6 +850,13 @@ class GroupActivity : DatabaseLockActivity() {
         addNodeButtonView?.setPickImageOtpClickListener {
             launchPickImageForOtp()
         }
+    }
+
+    private fun updateBreadcrumbVisibility() {
+        val isFlat = mGroupViewModel.isFlatView.value
+        val isFiltered = mGroupViewModel.vaultCategory.value != VaultCategory.ALL
+        val breadcrumbCount = mGroupViewModel.groupUIState.value.breadcrumbs?.size ?: 0
+        breadcrumbListView?.visibility = if (isFlat || isFiltered || breadcrumbCount <= 1) View.GONE else View.VISIBLE
     }
 
     private fun showNewEntryTypeBottomSheet() {

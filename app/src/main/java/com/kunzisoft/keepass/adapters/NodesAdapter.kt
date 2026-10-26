@@ -587,10 +587,13 @@ class NodesAdapter(
         if (mShowUserNames && node.username.isNotBlank()) {
             return node.username
         }
-        val cardNumber = node.creditCard?.number?.filter { !it.isWhitespace() }
-        if (!cardNumber.isNullOrEmpty()) {
-            val tail = if (cardNumber.length > 4) cardNumber.takeLast(4) else cardNumber
-            return "•••• $tail"
+        val cardNumChars = node.creditCard?.number
+        if (cardNumChars != null && cardNumChars.isNotEmpty()) {
+            val cardStr = String(cardNumChars).filter { !it.isWhitespace() }
+            if (cardStr.isNotEmpty()) {
+                val tail = if (cardStr.length > 4) cardStr.takeLast(4) else cardStr
+                return "•••• $tail"
+            }
         }
         val rp = node.passkey?.relyingParty
         if (!rp.isNullOrBlank()) {
