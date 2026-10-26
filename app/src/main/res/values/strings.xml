@@ -877,4 +877,21 @@
     <string name="credential_id_copied">Credential ID copied to clipboard</string>
     <string name="copied_otp_token">Token copied</string>
     <string name="options">Options</string>
+    <string name="create_new_credential">New Credential</string>
+    <string name="select_credential_type">Select credential or entry type to create</string>
+    <string name="credential_type_password">Password</string>
+    <string name="credential_type_password_desc">Website and app login credentials</string>
+    <string name="credential_type_totp">2FA / TOTP Authenticator</string>
+    <string name="credential_type_totp_desc">Dynamic one-time verification codes</string>
+    <string name="credential_type_passkey">Passkey</string>
+    <string name="credential_type_passkey_desc">FIDO2 / WebAuthn passwordless credential</string>
+    <string name="credential_type_card">Payment Card</string>
+    <string name="credential_type_card_desc">Card number, expiration, CVV and PIN</string>
+    <string name="credential_type_note">Secure Note</string>
+    <string name="credential_type_note_desc">Encrypted notes, seeds, private keys and memos</string>
+    <string name="credential_type_group">New Group</string>
+    <string name="credential_type_group_desc">Create a folder to organize your vault</string>
+    <string name="totp_action_scan">Scan QR</string>
+    <string name="totp_action_gallery">From Gallery</string>
+    <string name="totp_action_manual">Manual Entry</string>
 </resources>

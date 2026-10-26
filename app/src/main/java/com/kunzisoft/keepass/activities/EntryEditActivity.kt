@@ -58,6 +58,7 @@ import com.kunzisoft.keepass.activities.fragments.EntryEditFragment
 import com.kunzisoft.keepass.activities.helpers.ExternalFileHelper
 import com.kunzisoft.keepass.activities.helpers.ExternalFileHelper.openFile
 import com.kunzisoft.keepass.activities.helpers.ExternalFileHelper.registerOpenFile
+import com.kunzisoft.keepass.model.EntryType
 import com.kunzisoft.keepass.activities.legacy.DatabaseLockActivity
 import com.kunzisoft.keepass.adapters.TemplatesSelectorAdapter
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper
@@ -213,6 +214,8 @@ class EntryEditActivity : DatabaseLockActivity() {
 
         stopService(Intent(this, KeyboardEntryNotificationService::class.java))
 
+        val entryType = EntryType.fromString(intent.getStringExtra(EntryType.KEY_ENTRY_TYPE))
+
         mEntryEditViewModel.loadTemplateEntry(
             // Entry is retrieve, it's an entry to update
             entryId = intent.getParcelableExtraCompat<EntryId>(KEY_ENTRY),
@@ -220,7 +223,8 @@ class EntryEditActivity : DatabaseLockActivity() {
             parentId = intent.getParcelableExtraCompat<GroupId>(KEY_PARENT),
             // Register info from search
             registerInfo = intent.retrieveRegisterInfo()
-                ?: intent.retrieveSearchInfo()?.toRegisterInfo()
+                ?: intent.retrieveSearchInfo()?.toRegisterInfo(),
+            entryType = entryType
         )
 
         // Lock button
@@ -845,6 +849,7 @@ class EntryEditActivity : DatabaseLockActivity() {
             database: ContextualDatabase,
             registrationType: RegistrationType,
             nodeId: NodeId<*>,
+            entryType: EntryType = EntryType.PASSWORD,
             activityResultLauncher: ActivityResultLauncher<Intent>
         ) {
             if (database.loaded && !database.isReadOnly) {
@@ -854,6 +859,7 @@ class EntryEditActivity : DatabaseLockActivity() {
                         RegistrationType.UPDATE -> intent.putExtra(KEY_ENTRY, nodeId)
                         RegistrationType.CREATE -> intent.putExtra(KEY_PARENT, nodeId)
                     }
+                    intent.putExtra(EntryType.KEY_ENTRY_TYPE, entryType.name)
                     activityResultLauncher.launch(intent)
                 }
             }
@@ -868,12 +874,14 @@ class EntryEditActivity : DatabaseLockActivity() {
             typeMode: TypeMode,
             groupId: GroupId,
             searchInfo: SearchInfo? = null,
+            entryType: EntryType = EntryType.PASSWORD,
             activityResultLauncher: ActivityResultLauncher<Intent>? = null,
         ) {
             if (database.loaded && !database.isReadOnly) {
                 if (TimeoutHelper.checkTimeAndLockIfTimeout(context)) {
                     val intent = Intent(context, EntryEditActivity::class.java)
                     intent.putExtra(KEY_PARENT, groupId)
+                    intent.putExtra(EntryType.KEY_ENTRY_TYPE, entryType.name)
                     EntrySelectionHelper.startActivityForSelectionModeResult(
                         context = context,
                         intent = intent,
@@ -895,6 +903,7 @@ class EntryEditActivity : DatabaseLockActivity() {
             registerInfo: RegisterInfo? = null,
             typeMode: TypeMode,
             registrationType: RegistrationType,
+            entryType: EntryType = EntryType.PASSWORD,
             activityResultLauncher: ActivityResultLauncher<Intent>? = null,
         ) {
             if (database.loaded && !database.isReadOnly) {
@@ -904,6 +913,7 @@ class EntryEditActivity : DatabaseLockActivity() {
                         RegistrationType.UPDATE -> intent.putExtra(KEY_ENTRY, nodeId)
                         RegistrationType.CREATE -> intent.putExtra(KEY_PARENT, nodeId)
                     }
+                    intent.putExtra(EntryType.KEY_ENTRY_TYPE, entryType.name)
                     EntrySelectionHelper.startActivityForRegistrationModeResult(
                         context,
                         activityResultLauncher,

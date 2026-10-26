@@ -840,4 +840,21 @@
     <string name="credential_id_copied">凭证 ID 已复制到剪贴板</string>
     <string name="copied_otp_token">动态口令已复制</string>
     <string name="options">选项</string>
+    <string name="create_new_credential">新建凭证</string>
+    <string name="select_credential_type">选择要创建的条目类型</string>
+    <string name="credential_type_password">账号密码</string>
+    <string name="credential_type_password_desc">网站与应用登录密码，支持密码生成器</string>
+    <string name="credential_type_totp">双重认证令牌 (2FA / TOTP)</string>
+    <string name="credential_type_totp_desc">生成动态安全验证码，支持扫码导入</string>
+    <string name="credential_type_passkey">通行密钥 (Passkey)</string>
+    <string name="credential_type_passkey_desc">FIDO2 / WebAuthn 无密码安全凭证</string>
+    <string name="credential_type_card">银行卡 / 信用卡</string>
+    <string name="credential_type_card_desc">卡号、持卡人、有效期与 CVV 安全码</string>
+    <string name="credential_type_note">安全便签</string>
+    <string name="credential_type_note_desc">加密保存助记词、恢复码与保密文本</string>
+    <string name="credential_type_group">新建分组</string>
+    <string name="credential_type_group_desc">创建文件夹分类管理密码库</string>
+    <string name="totp_action_scan">扫码添加</string>
+    <string name="totp_action_gallery">相册识别</string>
+    <string name="totp_action_manual">手动输入</string>
 </resources>

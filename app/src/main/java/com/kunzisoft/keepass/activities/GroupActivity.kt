@@ -50,6 +50,8 @@ import com.kunzisoft.keepass.importer.DatabaseBatchImporter
 import com.kunzisoft.keepass.importer.model.ImportBatchResult
 import com.kunzisoft.keepass.importer.parsers.GoogleAuthMigrationDecoder
 import com.kunzisoft.keepass.importer.ui.ImportWizardActivity
+import com.kunzisoft.keepass.activities.dialogs.NewEntryTypeBottomSheetDialogFragment
+import com.kunzisoft.keepass.model.EntryType
 import com.kunzisoft.keepass.model.VaultCategory
 import com.kunzisoft.keepass.otp.scanner.OtpEntryQuickCreator
 import com.kunzisoft.keepass.otp.scanner.QrCodeDecoder
@@ -825,61 +827,96 @@ class GroupActivity : DatabaseLockActivity() {
             }
         }
 
-        // Add listeners to the add buttons
-        addNodeButtonView?.setAddGroupClickListener {
-            launchDialogForGroupCreation()
+        // Add listeners to the add button
+        addNodeButtonView?.addButtonView?.setOnClickListener {
+            showNewEntryTypeBottomSheet()
+        }
+        addNodeButtonView?.setMainFabClickListener {
+            showNewEntryTypeBottomSheet()
         }
         addNodeButtonView?.setAddEntryClickListener {
-            mDatabase?.let { database ->
-                mGroupViewModel.mainGroup?.nodeId?.let { currentGroupId ->
-                    EntrySelectionHelper.doSpecialAction(
-                        intent = intent,
-                        defaultAction = {
-                            EntryEditActivity.launch(
-                                activity = this@GroupActivity,
-                                database = database,
-                                registrationType = EntryEditActivity.RegistrationType.CREATE,
-                                nodeId = currentGroupId,
-                                activityResultLauncher = mEntryActivityResultLauncher
-                            )
-                        },
-                        searchAction = {
-                            // Search not used
-                        },
-                        selectionAction = { intentSenderMode, typeMode, searchInfo ->
-                            EntryEditActivity.launchForSelection(
-                                context = this@GroupActivity,
-                                database = database,
-                                typeMode = typeMode,
-                                groupId = currentGroupId,
-                                searchInfo = searchInfo,
-                                activityResultLauncher = if (intentSenderMode)
-                                    mCredentialActivityResultLauncher else null
-                            )
-                            onLaunchActivitySpecialMode()
-                        },
-                        registrationAction = { intentSenderMode, typeMode, registerInfo ->
-                            EntryEditActivity.launchForRegistration(
-                                context = this@GroupActivity,
-                                database = database,
-                                nodeId = currentGroupId,
-                                registerInfo = registerInfo,
-                                typeMode = typeMode,
-                                registrationType = EntryEditActivity.RegistrationType.CREATE,
-                                activityResultLauncher = if (intentSenderMode)
-                                    mCredentialActivityResultLauncher else null
-                            )
-                            onLaunchActivitySpecialMode()
-                        }
-                    )
-                }
-            }
+            showNewEntryTypeBottomSheet()
+        }
+        addNodeButtonView?.setAddGroupClickListener {
+            launchDialogForGroupCreation()
         }
         addNodeButtonView?.setScanOtpClickListener {
             launchScanQrForOtp()
         }
         addNodeButtonView?.setPickImageOtpClickListener {
             launchPickImageForOtp()
+        }
+    }
+
+    private fun showNewEntryTypeBottomSheet() {
+        val bottomSheet = NewEntryTypeBottomSheetDialogFragment.newInstance()
+        bottomSheet.listener = object : NewEntryTypeBottomSheetDialogFragment.Listener {
+            override fun onTypeSelected(type: EntryType) {
+                launchCreateEntry(type)
+            }
+
+            override fun onTotpScanQr() {
+                launchScanQrForOtp()
+            }
+
+            override fun onTotpPickImage() {
+                launchPickImageForOtp()
+            }
+
+            override fun onGroupSelected() {
+                launchDialogForGroupCreation()
+            }
+        }
+        bottomSheet.show(supportFragmentManager, NewEntryTypeBottomSheetDialogFragment.TAG)
+    }
+
+    private fun launchCreateEntry(entryType: EntryType = EntryType.PASSWORD) {
+        mDatabase?.let { database ->
+            mGroupViewModel.mainGroup?.nodeId?.let { currentGroupId ->
+                EntrySelectionHelper.doSpecialAction(
+                    intent = intent,
+                    defaultAction = {
+                        EntryEditActivity.launch(
+                            activity = this@GroupActivity,
+                            database = database,
+                            registrationType = EntryEditActivity.RegistrationType.CREATE,
+                            nodeId = currentGroupId,
+                            entryType = entryType,
+                            activityResultLauncher = mEntryActivityResultLauncher
+                        )
+                    },
+                    searchAction = {
+                        // Search not used
+                    },
+                    selectionAction = { intentSenderMode, typeMode, searchInfo ->
+                        EntryEditActivity.launchForSelection(
+                            context = this@GroupActivity,
+                            database = database,
+                            typeMode = typeMode,
+                            groupId = currentGroupId,
+                            searchInfo = searchInfo,
+                            entryType = entryType,
+                            activityResultLauncher = if (intentSenderMode)
+                                mCredentialActivityResultLauncher else null
+                        )
+                        onLaunchActivitySpecialMode()
+                    },
+                    registrationAction = { intentSenderMode, typeMode, registerInfo ->
+                        EntryEditActivity.launchForRegistration(
+                            context = this@GroupActivity,
+                            database = database,
+                            nodeId = currentGroupId,
+                            registerInfo = registerInfo,
+                            typeMode = typeMode,
+                            registrationType = EntryEditActivity.RegistrationType.CREATE,
+                            entryType = entryType,
+                            activityResultLauncher = if (intentSenderMode)
+                                mCredentialActivityResultLauncher else null
+                        )
+                        onLaunchActivitySpecialMode()
+                    }
+                )
+            }
         }
     }
 

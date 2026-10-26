@@ -20,6 +20,7 @@ package com.kunzisoft.keepass.database.element.template
 
 import com.kunzisoft.keepass.database.element.icon.IconImage
 import com.kunzisoft.keepass.database.element.icon.IconImageStandard
+import com.kunzisoft.keepass.model.PasskeyEntryFields
 import java.util.UUID
 
 class TemplateBuilder {
@@ -134,6 +135,27 @@ class TemplateBuilder {
         type = TemplateAttributeType.TEXT
     )
 
+    private val passkeyUsernameAttribute = TemplateAttribute(
+        label = PasskeyEntryFields.FIELD_USERNAME,
+        type = TemplateAttributeType.TEXT
+    )
+    private val passkeyRelyingPartyAttribute = TemplateAttribute(
+        label = PasskeyEntryFields.FIELD_RELYING_PARTY,
+        type = TemplateAttributeType.TEXT
+    )
+    private val passkeyCredentialIdAttribute = TemplateAttribute(
+        label = PasskeyEntryFields.FIELD_CREDENTIAL_ID,
+        type = TemplateAttributeType.TEXT
+    )
+    private val passkeyPrivateKeyAttribute = TemplateAttribute(
+        label = PasskeyEntryFields.FIELD_PRIVATE_KEY,
+        type = TemplateAttributeType.TEXT,
+        protected = true,
+        options = TemplateAttributeOption().apply {
+            setNumberLines(6)
+        }
+    )
+
     val email: Template
         get() {
             val sections = mutableListOf<TemplateSection>()
@@ -144,7 +166,7 @@ class TemplateBuilder {
             })
             sections.add(mainSection)
             return Template(
-                UUID.randomUUID(),
+                UUID_EMAIL,
                 TemplateField.LABEL_EMAIL,
                 IconImage(IconImageStandard(IconImageStandard.EMAIL_ID)),
                 sections)
@@ -160,7 +182,7 @@ class TemplateBuilder {
             })
             sections.add(mainSection)
             return Template(
-                UUID.randomUUID(),
+                UUID_WIFI,
                 TemplateField.LABEL_WIRELESS,
                 IconImage(IconImageStandard(IconImageStandard.WIRELESS_ID)),
                 sections)
@@ -174,8 +196,8 @@ class TemplateBuilder {
             })
             sections.add(mainSection)
             return Template(
-                UUID.randomUUID(),
-                TemplateField.LABEL_NOTES,
+                UUID_NOTES,
+                TemplateField.LABEL_SECURE_NOTE,
                 IconImage(IconImageStandard(IconImageStandard.LIST_ID)),
                 sections)
         }
@@ -192,7 +214,7 @@ class TemplateBuilder {
             })
             sections.add(mainSection)
             return Template(
-                UUID.randomUUID(),
+                UUID_ID_CARD,
                 TemplateField.LABEL_ID_CARD,
                 IconImage(IconImageStandard(IconImageStandard.ID_CARD_ID)),
                 sections)
@@ -210,7 +232,7 @@ class TemplateBuilder {
             })
             sections.add(mainSection)
             return Template(
-                UUID.randomUUID(),
+                UUID_CREDIT_CARD,
                 TemplateField.LABEL_DEBIT_CREDIT_CARD,
                 IconImage(IconImageStandard(IconImageStandard.CREDIT_CARD_ID)),
                 sections)
@@ -233,7 +255,7 @@ class TemplateBuilder {
             sections.add(mainSection)
             sections.add(ibanSection)
             return Template(
-                UUID.randomUUID(),
+                UUID_BANK,
                 TemplateField.LABEL_BANK,
                 IconImage(IconImageStandard(IconImageStandard.DOLLAR_ID)),
                 sections)
@@ -250,9 +272,37 @@ class TemplateBuilder {
             })
             sections.add(mainSection)
             return Template(
-                UUID.randomUUID(),
+                UUID_CRYPTO,
                 TemplateField.LABEL_CRYPTOCURRENCY,
                 IconImage(IconImageStandard(IconImageStandard.STAR_ID)),
                 sections)
         }
+
+    val passkey: Template
+        get() {
+            val sections = mutableListOf<TemplateSection>()
+            val mainSection = TemplateSection(mutableListOf<TemplateAttribute>().apply {
+                add(passkeyUsernameAttribute)
+                add(passkeyRelyingPartyAttribute)
+                add(passkeyCredentialIdAttribute)
+                add(passkeyPrivateKeyAttribute)
+            })
+            sections.add(mainSection)
+            return Template(
+                UUID_PASSKEY,
+                PasskeyEntryFields.PASSKEY_FIELD,
+                IconImage(IconImageStandard(IconImageStandard.KEY_ID)),
+                sections)
+        }
+
+    companion object {
+        val UUID_EMAIL = UUID(0, 101)
+        val UUID_WIFI = UUID(0, 102)
+        val UUID_NOTES = UUID(0, 103)
+        val UUID_ID_CARD = UUID(0, 104)
+        val UUID_CREDIT_CARD = UUID(0, 105)
+        val UUID_BANK = UUID(0, 106)
+        val UUID_CRYPTO = UUID(0, 107)
+        val UUID_PASSKEY = UUID(0, 108)
+    }
 }

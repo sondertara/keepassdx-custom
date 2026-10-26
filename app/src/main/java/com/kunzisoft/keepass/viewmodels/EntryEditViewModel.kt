@@ -25,11 +25,17 @@ import com.kunzisoft.keepass.database.element.EntryId
 import com.kunzisoft.keepass.database.element.Field
 import com.kunzisoft.keepass.database.element.GroupId
 import com.kunzisoft.keepass.database.element.Tags
+import com.kunzisoft.keepass.database.element.icon.IconImage
+import com.kunzisoft.keepass.database.element.icon.IconImageStandard
 import com.kunzisoft.keepass.database.element.template.Template
+import com.kunzisoft.keepass.database.element.template.TemplateBuilder
 import com.kunzisoft.keepass.model.EntryInfo
+import com.kunzisoft.keepass.model.EntryType
 import com.kunzisoft.keepass.model.FieldProtection
+import com.kunzisoft.keepass.model.PasskeyEntryFields
 import com.kunzisoft.keepass.model.RegisterInfo
 import com.kunzisoft.keepass.otp.OtpElement
+import com.kunzisoft.keepass.otp.OtpEntryFields
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -100,7 +106,8 @@ class EntryEditViewModel: NodeEditViewModel() {
     fun loadTemplateEntry(
         entryId: EntryId?,
         parentId: GroupId?,
-        registerInfo: RegisterInfo?
+        registerInfo: RegisterInfo?,
+        entryType: EntryType = EntryType.PASSWORD
     ) {
         if (this.mEntryId == entryId
             && this.mParentId == parentId
@@ -136,12 +143,56 @@ class EntryEditViewModel: NodeEditViewModel() {
                     }
                     // Create the entry
                     mParentId?.let {
-                        loadEntryInfo(database, database.buildNewEntryInfo(
+                        val newEntryInfo = database.buildNewEntryInfo(
                             parentId = it,
                             registerInfo = registerInfo
-                        ))
+                        )
+                        newEntryInfo?.let { info ->
+                            applyEntryTypeToNewEntry(info, entryType)
+                        }
+                        loadEntryInfo(database, newEntryInfo)
+                        if (entryType == EntryType.TOTP) {
+                            withContext(Dispatchers.Main) {
+                                _entryEditEvents.emit(EntryEditEvent.RequestSetupOTP)
+                            }
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    private fun applyEntryTypeToNewEntry(info: EntryInfo, entryType: EntryType) {
+        when (entryType) {
+            EntryType.PASSWORD -> {
+                // Standard default template
+            }
+            EntryType.CREDIT_CARD -> {
+                info.template = TemplateBuilder().creditCard
+                info.icon = IconImage(IconImageStandard(IconImageStandard.CREDIT_CARD_ID))
+                info.username = ""
+                info.password = ""
+                info.url = ""
+                info.tags.put("Credit Card")
+            }
+            EntryType.SECURE_NOTE -> {
+                info.template = TemplateBuilder().notes
+                info.icon = IconImage(IconImageStandard(IconImageStandard.LIST_ID))
+                info.username = ""
+                info.password = ""
+                info.url = ""
+                info.tags.put("Secure Note")
+            }
+            EntryType.TOTP -> {
+                info.icon = IconImage(IconImageStandard(IconImageStandard.KEY_ID))
+                info.tags.put(OtpEntryFields.OTP_TAG)
+            }
+            EntryType.PASSKEY -> {
+                info.template = TemplateBuilder().passkey
+                info.icon = IconImage(IconImageStandard(IconImageStandard.KEY_ID))
+                info.password = ""
+                info.url = ""
+                info.tags.put(PasskeyEntryFields.PASSKEY_TAG)
             }
         }
     }
@@ -161,8 +212,21 @@ class EntryEditViewModel: NodeEditViewModel() {
         }
         val selectedTemplate = entryInfo?.template ?: Template.STANDARD
         mPreviousTemplateTags = Tags(selectedTemplate.tags)
+        val dbTemplates = database.getTemplates(isTemplate)
+        val allTemplates = mutableListOf<Template>()
+        if (dbTemplates.isNotEmpty()) {
+            allTemplates.addAll(dbTemplates)
+        } else {
+            allTemplates.add(Template.STANDARD)
+            allTemplates.add(TemplateBuilder().creditCard)
+            allTemplates.add(TemplateBuilder().notes)
+            allTemplates.add(TemplateBuilder().passkey)
+        }
+        if (!allTemplates.any { it.uuid == selectedTemplate.uuid || it.title == selectedTemplate.title }) {
+            allTemplates.add(selectedTemplate)
+        }
         val templates = Templates(
-            templates = database.getTemplates(isTemplate),
+            templates = allTemplates,
             defaultTemplate = selectedTemplate
         )
         mTemplates = templates
