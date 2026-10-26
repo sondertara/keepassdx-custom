@@ -170,9 +170,8 @@ class SetOTPDialogFragment : DatabaseDialogFragment() {
                     val parsed = OtpEntryQuickCreator.parse(text)
                     if (parsed != null) {
                         applyParsedOtp(parsed)
-                        Toast.makeText(context, R.string.otp_element_saved, Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(context, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(ctx, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
