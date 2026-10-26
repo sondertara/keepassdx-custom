@@ -296,13 +296,13 @@ class TemplateBuilder {
         }
 
     companion object {
-        val UUID_EMAIL = UUID(0, 101)
-        val UUID_WIFI = UUID(0, 102)
-        val UUID_NOTES = UUID(0, 103)
-        val UUID_ID_CARD = UUID(0, 104)
-        val UUID_CREDIT_CARD = UUID(0, 105)
-        val UUID_BANK = UUID(0, 106)
-        val UUID_CRYPTO = UUID(0, 107)
-        val UUID_PASSKEY = UUID(0, 108)
+        val UUID_EMAIL = UUID(0L, 101L)
+        val UUID_WIFI = UUID(0L, 102L)
+        val UUID_NOTES = UUID(0L, 103L)
+        val UUID_ID_CARD = UUID(0L, 104L)
+        val UUID_CREDIT_CARD = UUID(0L, 105L)
+        val UUID_BANK = UUID(0L, 106L)
+        val UUID_CRYPTO = UUID(0L, 107L)
+        val UUID_PASSKEY = UUID(0L, 108L)
     }
 }

@@ -29,7 +29,7 @@ enum class EntryType {
         const val KEY_ENTRY_TYPE = "EXTRA_ENTRY_TYPE"
 
         fun fromString(value: String?): EntryType {
-            return entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: PASSWORD
+            return values().firstOrNull { it.name.equals(value, ignoreCase = true) } ?: PASSWORD
         }
     }
 }

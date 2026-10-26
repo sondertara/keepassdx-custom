@@ -49,13 +49,19 @@ jobs:
       - name: Push Failure Log to Branch
         if: failure()
         run: |
+          echo "### Gradle Build Failure Log" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -n 250 /tmp/gradle_output.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git checkout -B ci-debug-log
           tail -n 300 /tmp/gradle_output.log > gradle_failure.log
           git add gradle_failure.log
           git commit -m "ci: capture gradle failure log"
-          git push -f origin ci-debug-log
+          git push -f origin ci-debug-log || true
 
       - name: Prepare APK Output
         run: |
