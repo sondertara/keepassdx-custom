@@ -558,10 +558,11 @@ class GroupActivity : DatabaseLockActivity() {
                     combine(
                         mGroupViewModel.isFlatView,
                         mGroupViewModel.vaultCategory,
-                        mGroupViewModel.groupUIState.map { it.breadcrumbs?.size ?: 0 }.distinctUntilChanged()
-                    ) { isFlat, category, breadcrumbCount ->
+                        mGroupViewModel.groupUIState
+                    ) { isFlat: Boolean, category: VaultCategory, uiState: GroupViewModel.GroupUIState ->
+                        val breadcrumbCount = uiState.breadcrumbs?.size ?: 0
                         isFlat || category != VaultCategory.ALL || breadcrumbCount <= 1
-                    }.collect { shouldHideBreadcrumb ->
+                    }.distinctUntilChanged().collect { shouldHideBreadcrumb ->
                         breadcrumbListView?.visibility = if (shouldHideBreadcrumb) View.GONE else View.VISIBLE
                     }
                 }
