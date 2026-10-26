@@ -21,13 +21,9 @@ package com.kunzisoft.keepass.activities.dialogs
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.ClipboardManager
-import android.content.Context
 import android.os.Bundle
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -35,13 +31,10 @@ import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.kunzisoft.keepass.R
 import com.kunzisoft.keepass.model.OtpModel
@@ -54,19 +47,7 @@ import com.kunzisoft.keepass.otp.OtpElement.Companion.MIN_OTP_DIGITS
 import com.kunzisoft.keepass.otp.OtpElement.Companion.MIN_OTP_SECRET
 import com.kunzisoft.keepass.otp.OtpElement.Companion.MIN_TOTP_PERIOD
 import com.kunzisoft.keepass.otp.OtpTokenType
-import android.content.Intent
-import android.graphics.BitmapFactory
-import android.net.Uri
-import android.widget.Toast
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.lifecycle.lifecycleScope
 import com.kunzisoft.keepass.otp.scanner.OtpEntryQuickCreator
-import com.kunzisoft.keepass.otp.scanner.QrCodeDecoder
-import com.kunzisoft.keepass.otp.scanner.QrScanActivity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import com.kunzisoft.keepass.otp.OtpType
 import com.kunzisoft.keepass.otp.TokenCalculator
 import com.kunzisoft.keepass.utils.AppUtil.isContributingUser
@@ -78,106 +59,6 @@ import java.util.Locale
 class SetOTPDialogFragment : DatabaseDialogFragment() {
 
     private val entryEditViewModel: EntryEditViewModel by activityViewModels()
-
-    private val mScanOtpLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            result.data?.getStringExtra(QrScanActivity.EXTRA_SCAN_RESULT)?.let { qrText ->
-                val parsed = OtpEntryQuickCreator.parse(qrText)
-                if (parsed != null) {
-                    applyParsedOtp(parsed)
-                } else {
-                    Toast.makeText(context, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private val mPickImageOtpLauncher =
-        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
-            uri?.let { decodeImageForOtp(it) }
-        }
-
-    private fun decodeImageForOtp(uri: Uri) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                requireContext().contentResolver.openInputStream(uri)?.use { stream ->
-                    val bitmap = BitmapFactory.decodeStream(stream)
-                    if (bitmap != null) {
-                        val text = QrCodeDecoder.decodeBitmap(bitmap, recycle = true)
-                        withContext(Dispatchers.Main) {
-                            if (text != null) {
-                                val parsed = OtpEntryQuickCreator.parse(text)
-                                if (parsed != null) {
-                                    applyParsedOtp(parsed)
-                                } else {
-                                    Toast.makeText(context, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
-                                }
-                            } else {
-                                Toast.makeText(context, R.string.qr_no_code_found, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, R.string.qr_no_code_found, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private fun showPasteLinkDialog() {
-        val ctx = context ?: return
-        var clipboardText = ""
-        try {
-            val clipboard = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-            val clip = clipboard?.primaryClip
-            if (clip != null && clip.itemCount > 0) {
-                val item = clip.getItemAt(0)?.text?.toString()?.trim()
-                if (item != null && (item.startsWith("otpauth://", ignoreCase = true)
-                            || item.replace(" ", "").matches(Regex("^[A-Z2-7=]{16,128}$")))) {
-                    clipboardText = item
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("SetOTPDialog", "Error checking clipboard for OTP", e)
-        }
-
-        val container = FrameLayout(ctx).apply {
-            val pad = (20 * resources.displayMetrics.density).toInt()
-            val padTop = (8 * resources.displayMetrics.density).toInt()
-            setPadding(pad, padTop, pad, 0)
-        }
-        val inputLayout = TextInputLayout(ctx).apply {
-            hint = getString(R.string.dialog_import_totp_hint)
-        }
-        val inputEditText = TextInputEditText(ctx).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
-            if (clipboardText.isNotEmpty()) {
-                setText(clipboardText)
-                setSelection(clipboardText.length)
-            }
-        }
-        inputLayout.addView(inputEditText)
-        container.addView(inputLayout)
-
-        MaterialAlertDialogBuilder(ctx)
-            .setTitle(R.string.dialog_import_totp_title)
-            .setView(container)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                val text = inputEditText.text?.toString()?.trim().orEmpty()
-                if (text.isNotEmpty()) {
-                    val parsed = OtpEntryQuickCreator.parse(text)
-                    if (parsed != null) {
-                        applyParsedOtp(parsed)
-                    } else {
-                        Toast.makeText(ctx, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
-    }
 
     private var mSuggestedTitle: String? = null
     private var mSuggestedAccount: String? = null
@@ -285,18 +166,6 @@ class SetOTPDialogFragment : DatabaseDialogFragment() {
             otpCounterTextView = root?.findViewById(R.id.setup_otp_counter)
             otpDigitsContainer = root?.findViewById(R.id.setup_otp_digits_label)
             otpDigitsTextView = root?.findViewById(R.id.setup_otp_digits)
-
-            root?.findViewById<View>(R.id.button_scan_otp_dialog)?.setOnClickListener {
-                mScanOtpLauncher.launch(Intent(requireContext(), QrScanActivity::class.java))
-            }
-            root?.findViewById<View>(R.id.button_pick_image_dialog)?.setOnClickListener {
-                mPickImageOtpLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
-            }
-            root?.findViewById<View>(R.id.button_paste_otp_dialog)?.setOnClickListener {
-                showPasteLinkDialog()
-            }
 
             // To fix init element
             // With tab keyboard selection
