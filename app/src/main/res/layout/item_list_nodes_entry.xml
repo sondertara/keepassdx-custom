@@ -63,7 +63,7 @@
                 android:layout_gravity="center_vertical"
                 tools:src="@drawable/ic_blank_32dp" />
 
-            <!-- Middle column: Standardized 2-line Title + Subtitle -->
+            <!-- Main Column: Row 1 (Title + Type Badge + Menu) & Row 2 (Subtitle + Inline OTP) -->
             <LinearLayout
                 android:id="@+id/node_content_column"
                 android:layout_width="0dp"
@@ -73,30 +73,109 @@
                 android:gravity="center_vertical"
                 android:orientation="vertical">
 
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/node_text"
+                <!-- Row 1: Full-width Title + Category Badge + Menu (⋮) -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface"
-                    tools:text="account.jetbrains.com" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <!-- Subtitle / Username / Account / Fallback Summary -->
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/node_subtext"
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/node_text"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorOnSurface"
+                        tools:text="account.jetbrains.com" />
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/node_attachment_icon"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="4dp"
+                        android:src="@drawable/ic_attach_file_white_24dp"
+                        app:tint="?attr/colorOnSurfaceVariant"
+                        android:visibility="gone" />
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/node_passkey_icon"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="4dp"
+                        android:padding="2dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/passkey"
+                        android:src="@drawable/ic_passkey_white_24dp"
+                        app:tint="#6366F1"
+                        android:visibility="gone" />
+
+                    <!-- Unified Right-Aligned Category Badge -->
+                    <TextView
+                        android:id="@+id/node_badge_totp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/badge_totp_pill"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp"
+                        android:gravity="center"
+                        android:singleLine="true"
+                        android:text="密码"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#4D6BFE"
+                        android:visibility="visible" />
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/node_btn_menu"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:padding="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_more_vert_24dp"
+                        app:tint="?attr/colorOnSurfaceVariant"
+                        android:contentDescription="@string/options" />
+                </LinearLayout>
+
+                <!-- Row 2: Subtitle / Account + Inline Compact OTP Token & Countdown -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:lines="1"
-                    android:singleLine="true"
-                    android:ellipsize="end"
-                    android:textSize="13sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    tools:text="xhhuangchn@outlook.com" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/node_subtext"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:lines="1"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:textSize="13sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="xhhuangchn@outlook.com" />
+
+                    <com.kunzisoft.keepass.view.OtpDisplayView
+                        android:id="@+id/node_otp_display"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:gravity="center_vertical"
+                        android:background="?attr/selectableItemBackground"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+                </LinearLayout>
 
                 <!-- Tags (Optional via settings) -->
                 <androidx.recyclerview.widget.RecyclerView
@@ -124,60 +203,6 @@
                     android:textColor="?attr/colorOutline"
                     android:visibility="gone" />
 
-            </LinearLayout>
-
-            <!-- Right Fixed Column: Inline OTP + Action Menu (⋮) -->
-            <LinearLayout
-                android:id="@+id/node_right_options"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginStart="6dp">
-
-                <!-- Inline Compact OTP Token + Countdown -->
-                <com.kunzisoft.keepass.view.OtpDisplayView
-                    android:id="@+id/node_otp_display"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="2dp"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="4dp"
-                    android:gravity="center_vertical"
-                    android:background="?attr/selectableItemBackground"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
-
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:id="@+id/node_attachment_icon"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginEnd="4dp"
-                    android:src="@drawable/ic_attach_file_white_24dp"
-                    app:tint="?attr/colorOnSurfaceVariant"
-                    android:visibility="gone" />
-
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:id="@+id/node_passkey_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginEnd="4dp"
-                    android:padding="2dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/passkey"
-                    android:src="@drawable/ic_passkey_white_24dp"
-                    app:tint="#6366F1"
-                    android:visibility="gone" />
-
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:id="@+id/node_btn_menu"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:padding="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_more_vert_24dp"
-                    app:tint="?attr/colorOnSurfaceVariant"
-                    android:contentDescription="@string/options" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
