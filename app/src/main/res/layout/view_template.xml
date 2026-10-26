@@ -41,6 +41,7 @@
 				android:layout_height="36dp"
 				android:layout_margin="9dp"
 				android:layout_gravity="top|end"
+				android:visibility="gone"
 				android:background="@drawable/background_rounded_square" />
 			<View
 				android:id="@+id/template_foreground_color"
@@ -48,6 +49,7 @@
 				android:layout_height="36dp"
 				android:layout_margin="32dp"
 				android:layout_gravity="top|end"
+				android:visibility="gone"
 				android:background="@drawable/background_rounded_square" />
 
 			<ImageView
@@ -56,6 +58,7 @@
 				android:layout_height="wrap_content"
 				android:layout_gravity="top|end"
 				android:layout_margin="3dp"
+				android:visibility="gone"
 				android:src="@drawable/ic_color_background_white_24dp"
 				android:contentDescription="@string/content_description_entry_background_color"
 				style="@style/KeepassDXStyle.ImageButton.Simple.Mini" />
@@ -65,6 +68,7 @@
 				android:layout_height="wrap_content"
 				android:layout_gravity="top|end"
 				android:layout_margin="25dp"
+				android:visibility="gone"
 				android:src="@drawable/ic_color_foreground_white_24dp"
 				android:contentDescription="@string/content_description_entry_background_color"
 				style="@style/KeepassDXStyle.ImageButton.Simple.Mini" />

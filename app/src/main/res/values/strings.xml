@@ -889,6 +889,11 @@
     <string name="credential_type_card_desc">Card number, expiration, CVV and PIN</string>
     <string name="credential_type_note">Secure Note</string>
     <string name="credential_type_note_desc">Encrypted notes, seeds, private keys and memos</string>
+    <string name="credential_type_email_desc">Email address, login password and mail server URL</string>
+    <string name="credential_type_wifi_desc">Wireless network SSID, security protocol and password</string>
+    <string name="credential_type_id_card_desc">ID number, full name, place of issue and expiration</string>
+    <string name="credential_type_bank_desc">Bank login credentials, account holder, IBAN and BIC</string>
+    <string name="credential_type_crypto_desc">Token, public key, private key and recovery seed phrase</string>
     <string name="credential_type_group">New Group</string>
     <string name="credential_type_group_desc">Create a folder to organize your vault</string>
     <string name="totp_action_scan">Scan QR</string>

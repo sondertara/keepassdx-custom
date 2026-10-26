@@ -92,13 +92,8 @@ class TemplateEditView @JvmOverloads constructor(
     }
 
     private fun applyBackgroundColor(color: Int?) {
-        if (color != null) {
-            backgroundColorView.background.colorFilter = BlendModeColorFilterCompat
-                .createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_ATOP)
-            backgroundColorView.visibility = VISIBLE
-        } else {
-            backgroundColorView.visibility = GONE
-        }
+        backgroundColorView.visibility = GONE
+        backgroundColorButton.visibility = GONE
     }
 
     fun setOnForegroundColorClickListener(onClickListener: OnClickListener) {
@@ -115,13 +110,8 @@ class TemplateEditView @JvmOverloads constructor(
     }
 
     private fun applyForegroundColor(color: Int?) {
-        if (color != null) {
-            foregroundColorView.background.colorFilter = BlendModeColorFilterCompat
-            .createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_ATOP)
-            foregroundColorView.visibility = VISIBLE
-        } else {
-            foregroundColorView.visibility = GONE
-        }
+        foregroundColorView.visibility = GONE
+        foregroundColorButton.visibility = GONE
     }
 
     override fun preProcessTemplate() {

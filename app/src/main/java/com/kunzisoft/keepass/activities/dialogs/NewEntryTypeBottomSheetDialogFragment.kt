@@ -103,8 +103,35 @@ class NewEntryTypeBottomSheetDialogFragment : BottomSheetDialogFragment() {
             listener?.onTypeSelected(EntryType.TOTP)
         }
 
-        // 3. Passkey
+        // 3. Passkey (Expandable actions: Scan FIDO QR, Gallery, Manual)
+        val passkeySubActions = view.findViewById<View>(R.id.layout_passkey_actions)
+        val passkeyArrow = view.findViewById<ImageView>(R.id.icon_passkey_arrow)
         view.findViewById<View>(R.id.item_type_passkey)?.setOnClickListener {
+            if (passkeySubActions != null) {
+                if (passkeySubActions.visibility == View.VISIBLE) {
+                    passkeySubActions.visibility = View.GONE
+                    passkeyArrow?.animate()?.rotation(0f)?.setDuration(200)?.start()
+                } else {
+                    passkeySubActions.visibility = View.VISIBLE
+                    passkeyArrow?.animate()?.rotation(180f)?.setDuration(200)?.start()
+                }
+            } else {
+                dismiss()
+                listener?.onTypeSelected(EntryType.PASSKEY)
+            }
+        }
+
+        view.findViewById<View>(R.id.btn_passkey_scan)?.setOnClickListener {
+            dismiss()
+            listener?.onTotpScanQr()
+        }
+
+        view.findViewById<View>(R.id.btn_passkey_gallery)?.setOnClickListener {
+            dismiss()
+            listener?.onTotpPickImage()
+        }
+
+        view.findViewById<View>(R.id.btn_passkey_manual)?.setOnClickListener {
             dismiss()
             listener?.onTypeSelected(EntryType.PASSKEY)
         }
@@ -121,7 +148,37 @@ class NewEntryTypeBottomSheetDialogFragment : BottomSheetDialogFragment() {
             listener?.onTypeSelected(EntryType.SECURE_NOTE)
         }
 
-        // 6. Group
+        // 6. Email
+        view.findViewById<View>(R.id.item_type_email)?.setOnClickListener {
+            dismiss()
+            listener?.onTypeSelected(EntryType.EMAIL)
+        }
+
+        // 7. Wi-Fi (Wireless)
+        view.findViewById<View>(R.id.item_type_wifi)?.setOnClickListener {
+            dismiss()
+            listener?.onTypeSelected(EntryType.WIFI)
+        }
+
+        // 8. ID Card
+        view.findViewById<View>(R.id.item_type_id_card)?.setOnClickListener {
+            dismiss()
+            listener?.onTypeSelected(EntryType.ID_CARD)
+        }
+
+        // 9. Bank
+        view.findViewById<View>(R.id.item_type_bank)?.setOnClickListener {
+            dismiss()
+            listener?.onTypeSelected(EntryType.BANK)
+        }
+
+        // 10. Cryptocurrency
+        view.findViewById<View>(R.id.item_type_crypto)?.setOnClickListener {
+            dismiss()
+            listener?.onTypeSelected(EntryType.CRYPTOCURRENCY)
+        }
+
+        // 11. Group
         view.findViewById<View>(R.id.item_type_group)?.setOnClickListener {
             dismiss()
             listener?.onGroupSelected()

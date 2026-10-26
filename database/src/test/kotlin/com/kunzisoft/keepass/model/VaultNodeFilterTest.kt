@@ -114,15 +114,23 @@ class VaultNodeFilterTest {
     }
 
     @Test
-    fun testFilterFavorites() {
-        val nodes = listOf(
-            createSortedEntry("Favorite 1", tags = listOf("Favorite")),
-            createSortedEntry("Favorite 2", tags = listOf("常用")),
-            createSortedEntry("Normal Entry", tags = listOf("Server"))
-        )
+    fun testFilterOfficialTemplates() {
+        val cardEntry = SortedEntryInfo(EntryInfo().apply {
+            title = "Visa Card"
+            template = com.kunzisoft.keepass.database.element.template.TemplateBuilder().creditCard
+        })
+        val noteEntry = SortedEntryInfo(EntryInfo().apply {
+            title = "Recovery Phrase"
+            template = com.kunzisoft.keepass.database.element.template.TemplateBuilder().notes
+        })
+        val bankEntry = SortedEntryInfo(EntryInfo().apply {
+            title = "Bank Account"
+            template = com.kunzisoft.keepass.database.element.template.TemplateBuilder().bank
+        })
+        val nodes = listOf(cardEntry, noteEntry, bankEntry)
 
-        val result = VaultNodeFilter.filter(nodes, VaultCategory.FAVORITES)
-        assertEquals(2, result.size)
-        assertTrue(result.all { VaultNodeFilter.isFavoriteEntry(it as EntryInfo) })
+        assertEquals(1, VaultNodeFilter.filter(nodes, VaultCategory.CREDIT_CARD).size)
+        assertEquals(1, VaultNodeFilter.filter(nodes, VaultCategory.SECURE_NOTE).size)
+        assertEquals(1, VaultNodeFilter.filter(nodes, VaultCategory.BANK).size)
     }
 }

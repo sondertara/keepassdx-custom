@@ -182,7 +182,6 @@ class GroupActivity : DatabaseLockActivity() {
     private var chipFilterPasswords: Chip? = null
     private var chipFilterPasskeys: Chip? = null
     private var chipFilterTotp: Chip? = null
-    private var chipFilterFavorites: Chip? = null
     private var searchView: ViewGroup? = null
     private var loadingView: ProgressBar? = null
 
@@ -353,7 +352,6 @@ class GroupActivity : DatabaseLockActivity() {
         chipFilterPasswords = findViewById(R.id.chip_filter_passwords)
         chipFilterPasskeys = findViewById(R.id.chip_filter_passkeys)
         chipFilterTotp = findViewById(R.id.chip_filter_totp)
-        chipFilterFavorites = findViewById(R.id.chip_filter_favorites)
 
         filterChipGroup?.setOnCheckedStateChangeListener { _, checkedIds ->
             if (checkedIds.isEmpty()) return@setOnCheckedStateChangeListener
@@ -369,14 +367,32 @@ class GroupActivity : DatabaseLockActivity() {
                 R.id.chip_filter_passwords -> {
                     mGroupViewModel.setVaultCategory(VaultCategory.PASSWORDS)
                 }
-                R.id.chip_filter_passkeys -> {
-                    mGroupViewModel.setVaultCategory(VaultCategory.PASSKEYS)
-                }
                 R.id.chip_filter_totp -> {
                     mGroupViewModel.setVaultCategory(VaultCategory.TOTP)
                 }
-                R.id.chip_filter_favorites -> {
-                    mGroupViewModel.setVaultCategory(VaultCategory.FAVORITES)
+                R.id.chip_filter_passkeys -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.PASSKEYS)
+                }
+                R.id.chip_filter_cards -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.CREDIT_CARD)
+                }
+                R.id.chip_filter_notes -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.SECURE_NOTE)
+                }
+                R.id.chip_filter_email -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.EMAIL)
+                }
+                R.id.chip_filter_wifi -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.WIFI)
+                }
+                R.id.chip_filter_id_card -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.ID_CARD)
+                }
+                R.id.chip_filter_bank -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.BANK)
+                }
+                R.id.chip_filter_crypto -> {
+                    mGroupViewModel.setVaultCategory(VaultCategory.CRYPTOCURRENCY)
                 }
             }
         }
@@ -974,6 +990,7 @@ class GroupActivity : DatabaseLockActivity() {
                             val item = clip.getItemAt(0)?.text?.toString()?.trim()
                             if (item != null && (item.startsWith("otpauth://", ignoreCase = true)
                                         || item.startsWith("otpauth-migration://", ignoreCase = true)
+                                        || item.startsWith("fido:/", ignoreCase = true)
                                         || item.replace(" ", "").matches(Regex("^[A-Z2-7=]{16,128}$")))) {
                                 clipboardText = item
                             }
@@ -1052,6 +1069,24 @@ class GroupActivity : DatabaseLockActivity() {
     }
 
     private fun handleScannedOtpResult(qrText: String) {
+        val trimmedQr = qrText.trim()
+        if (trimmedQr.startsWith("fido:/", ignoreCase = true)) {
+            try {
+                val fidoIntent = Intent(Intent.ACTION_VIEW, Uri.parse(trimmedQr)).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(fidoIntent)
+            } catch (e: Exception) {
+                Log.e(this.javaClass.name, "Failed to launch FIDO intent", e)
+                Toast.makeText(
+                    this,
+                    "当前系统未安装支持 FIDO (fido:/) 跨设备握手的系统组件",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            return
+        }
+
         if (GoogleAuthMigrationDecoder.isMigrationUri(qrText)) {
             val entries = GoogleAuthMigrationDecoder.decode(qrText)
             if (entries.isEmpty()) {

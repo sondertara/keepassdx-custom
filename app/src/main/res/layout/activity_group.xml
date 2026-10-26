@@ -156,16 +156,7 @@
                             android:layout_height="wrap_content"
                             app:chipIcon="@drawable/ic_lock_white_24dp"
                             app:chipIconVisible="true"
-                            android:text="@string/filter_passwords" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_filter_passkeys"
-                            style="@style/KeepassDXStyle.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            app:chipIcon="@drawable/ic_passkey_white_24dp"
-                            app:chipIconVisible="true"
-                            android:text="@string/filter_passkeys" />
+                            android:text="@string/standard" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_filter_totp"
@@ -174,16 +165,79 @@
                             android:layout_height="wrap_content"
                             app:chipIcon="@drawable/ic_otp_white_24dp"
                             app:chipIconVisible="true"
-                            android:text="@string/filter_totp" />
+                            android:text="@string/template_totp" />
 
                         <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_filter_favorites"
+                            android:id="@+id/chip_filter_passkeys"
+                            style="@style/KeepassDXStyle.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipIcon="@drawable/ic_passkey_white_24dp"
+                            app:chipIconVisible="true"
+                            android:text="@string/passkey" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_filter_cards"
+                            style="@style/KeepassDXStyle.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipIcon="@drawable/ic_credit_card_white_24dp"
+                            app:chipIconVisible="true"
+                            android:text="@string/debit_credit_card" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_filter_notes"
+                            style="@style/KeepassDXStyle.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipIcon="@drawable/ic_list_white_24dp"
+                            app:chipIconVisible="true"
+                            android:text="@string/secure_note" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_filter_email"
+                            style="@style/KeepassDXStyle.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipIcon="@drawable/ic_comment_white_24dp"
+                            app:chipIconVisible="true"
+                            android:text="@string/email" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_filter_wifi"
+                            style="@style/KeepassDXStyle.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipIcon="@drawable/ic_web_white_24dp"
+                            app:chipIconVisible="true"
+                            android:text="@string/wireless" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_filter_id_card"
+                            style="@style/KeepassDXStyle.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipIcon="@drawable/ic_person_white_24dp"
+                            app:chipIconVisible="true"
+                            android:text="@string/id_card" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_filter_bank"
+                            style="@style/KeepassDXStyle.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipIcon="@drawable/ic_shield_white_24dp"
+                            app:chipIconVisible="true"
+                            android:text="@string/bank" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_filter_crypto"
                             style="@style/KeepassDXStyle.Chip.Filter"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             app:chipIcon="@drawable/ic_star_white_48dp"
                             app:chipIconVisible="true"
-                            android:text="@string/filter_favorites" />
+                            android:text="@string/cryptocurrency" />
 
                     </com.google.android.material.chip.ChipGroup>
                 </HorizontalScrollView>

@@ -703,8 +703,8 @@ class EntryEditActivity : DatabaseLockActivity() {
             isVisible = isEnabled
         }
         menu?.findItem(R.id.menu_add_otp)?.apply {
-            isEnabled = mEntryEditViewModel.allowOTP && !mEntryEditViewModel.isTemplate
-            isVisible = isEnabled
+            isEnabled = false
+            isVisible = false
         }
         return super.onPrepareOptionsMenu(menu)
     }

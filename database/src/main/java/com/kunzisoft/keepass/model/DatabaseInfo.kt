@@ -132,7 +132,7 @@ open class DatabaseInfo: Database() {
             if (!raw)
                 stopManageEntry(this)
         }
-        if (entryInfo.template == null) {
+        if (entryInfo.template == Template.STANDARD) {
             when {
                 entryInfo.otpModel != null && entryInfo.password.isEmpty() -> {
                     entryInfo.template = TemplateBuilder().totp

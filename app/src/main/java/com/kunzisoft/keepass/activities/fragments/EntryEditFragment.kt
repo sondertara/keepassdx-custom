@@ -358,7 +358,7 @@ class EntryEditFragment: DatabaseFragment() {
             threshold = 1
             setAdapter(tagsAdapter)
         }
-        tagsContainerView.visibility = if (database.allowTags()) View.VISIBLE else View.GONE
+        tagsContainerView.visibility = View.GONE
     }
 
     private fun assignEntryInfo(entryInfo: EntryInfo?) {

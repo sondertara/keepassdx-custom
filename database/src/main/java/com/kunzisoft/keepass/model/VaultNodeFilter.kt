@@ -19,23 +19,29 @@
  */
 package com.kunzisoft.keepass.model
 
-import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.database.element.Group
 import com.kunzisoft.keepass.database.element.node.EmptyNodeFilter
 import com.kunzisoft.keepass.database.element.node.NodeFilter
+import com.kunzisoft.keepass.database.element.template.TemplateBuilder
+import com.kunzisoft.keepass.database.element.template.TemplateField
 import com.kunzisoft.keepass.otp.OtpEntryFields
-import java.util.Locale
 
 enum class VaultCategory {
     ALL,
     PASSWORDS,
-    PASSKEYS,
     TOTP,
-    FAVORITES
+    PASSKEYS,
+    CREDIT_CARD,
+    SECURE_NOTE,
+    EMAIL,
+    WIFI,
+    ID_CARD,
+    BANK,
+    CRYPTOCURRENCY
 }
 
 /**
- * Filter and flattener for vault entries.
+ * Filter and flattener for vault entries aligned with the 10 official templates.
  */
 object VaultNodeFilter {
 
@@ -46,32 +52,60 @@ object VaultNodeFilter {
         nodes: List<SortedNodeInfo>,
         category: VaultCategory
     ): List<SortedNodeInfo> {
-        return when (category) {
-            VaultCategory.ALL -> nodes
-            VaultCategory.PASSWORDS -> nodes.filter { node ->
-                node is EntryInfo && node.password.isNotEmpty()
-            }
-            VaultCategory.PASSKEYS -> nodes.filter { node ->
-                node is EntryInfo && isPasskeyEntry(node)
-            }
-            VaultCategory.TOTP -> nodes.filter { node ->
-                node is EntryInfo && isTotpEntry(node)
-            }
-            VaultCategory.FAVORITES -> nodes.filter { node ->
-                node is EntryInfo && isFavoriteEntry(node)
-            }
+        if (category == VaultCategory.ALL) return nodes
+        return nodes.filter { node ->
+            node is EntryInfo && matchesCategory(node, category)
         }
     }
 
+    fun matchesCategory(entry: EntryInfo, category: VaultCategory): Boolean {
+        return when (category) {
+            VaultCategory.ALL -> true
+            VaultCategory.PASSWORDS -> isPasswordEntry(entry)
+            VaultCategory.TOTP -> isTotpEntry(entry)
+            VaultCategory.PASSKEYS -> isPasskeyEntry(entry)
+            VaultCategory.CREDIT_CARD -> isCreditCardEntry(entry)
+            VaultCategory.SECURE_NOTE -> isSecureNoteEntry(entry)
+            VaultCategory.EMAIL -> isEmailEntry(entry)
+            VaultCategory.WIFI -> isWifiEntry(entry)
+            VaultCategory.ID_CARD -> isIdCardEntry(entry)
+            VaultCategory.BANK -> isBankEntry(entry)
+            VaultCategory.CRYPTOCURRENCY -> isCryptoEntry(entry)
+        }
+    }
+
+    fun isPasswordEntry(entry: EntryInfo): Boolean {
+        if (isEmailEntry(entry) || isWifiEntry(entry) || isIdCardEntry(entry) ||
+            isBankEntry(entry) || isCryptoEntry(entry) || isCreditCardEntry(entry)
+        ) {
+            return false
+        }
+        val templateTitle = entry.template.title
+        if (templateTitle.equals(TemplateField.LABEL_TOTP, ignoreCase = true) ||
+            templateTitle.equals(PasskeyEntryFields.PASSKEY_FIELD, ignoreCase = true) ||
+            templateTitle.equals(TemplateField.LABEL_SECURE_NOTE, ignoreCase = true)
+        ) {
+            return false
+        }
+        return entry.password.isNotEmpty()
+    }
+
     fun isPasskeyEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
         return entry.passkey != null
+                || tpl.uuid == TemplateBuilder.UUID_PASSKEY
+                || tpl.title.equals(PasskeyEntryFields.PASSKEY_FIELD, ignoreCase = true)
                 || entry.containsCustomField(PasskeyEntryFields.FIELD_USERNAME)
                 || entry.tags.contains(PasskeyEntryFields.PASSKEY_TAG)
                 || entry.tags.toStringList().any { it.equals("passkey", ignoreCase = true) }
     }
 
     fun isTotpEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
         return entry.otpModel != null
+                || tpl.uuid == TemplateBuilder.UUID_TOTP
+                || tpl.title.equals(TemplateField.LABEL_TOTP, ignoreCase = true)
+                || entry.containsCustomField(OtpEntryFields.OTP_FIELD)
                 || entry.tags.contains(OtpEntryFields.OTP_TAG)
                 || entry.tags.toStringList().any {
                     it.equals("otp", ignoreCase = true)
@@ -80,18 +114,54 @@ object VaultNodeFilter {
                 }
     }
 
-    fun isFavoriteEntry(entry: EntryInfo): Boolean {
-        return entry.tags.toStringList().any { tag ->
-            val lower = tag.lowercase(Locale.ROOT)
-            lower == "favorite" || lower == "favourites" || lower == "常用" || lower == "收藏" || lower == "星标"
-        }
+    fun isCreditCardEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
+        return entry.creditCard?.number?.isNotEmpty() == true
+                || tpl.uuid == TemplateBuilder.UUID_CREDIT_CARD
+                || tpl.title.equals(TemplateField.LABEL_DEBIT_CREDIT_CARD, ignoreCase = true)
     }
 
-    private fun isFavoriteRawEntry(entry: Entry): Boolean {
-        return entry.tags.toStringList().any { tag ->
-            val lower = tag.lowercase(Locale.ROOT)
-            lower == "favorite" || lower == "favourites" || lower == "常用" || lower == "收藏" || lower == "星标"
+    fun isSecureNoteEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
+        if (tpl.uuid == TemplateBuilder.UUID_NOTES ||
+            tpl.title.equals(TemplateField.LABEL_SECURE_NOTE, ignoreCase = true)
+        ) {
+            return true
         }
+        return !isTotpEntry(entry) && !isPasskeyEntry(entry) && !isCreditCardEntry(entry) &&
+                !isEmailEntry(entry) && !isWifiEntry(entry) && !isIdCardEntry(entry) &&
+                !isBankEntry(entry) && !isCryptoEntry(entry) &&
+                entry.username.isEmpty() && entry.password.isEmpty() && entry.notes.isNotEmpty()
+    }
+
+    fun isEmailEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
+        return tpl.uuid == TemplateBuilder.UUID_EMAIL ||
+                tpl.title.equals(TemplateField.LABEL_EMAIL, ignoreCase = true)
+    }
+
+    fun isWifiEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
+        return tpl.uuid == TemplateBuilder.UUID_WIFI ||
+                tpl.title.equals(TemplateField.LABEL_WIRELESS, ignoreCase = true)
+    }
+
+    fun isIdCardEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
+        return tpl.uuid == TemplateBuilder.UUID_ID_CARD ||
+                tpl.title.equals(TemplateField.LABEL_ID_CARD, ignoreCase = true)
+    }
+
+    fun isBankEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
+        return tpl.uuid == TemplateBuilder.UUID_BANK ||
+                tpl.title.equals(TemplateField.LABEL_BANK, ignoreCase = true)
+    }
+
+    fun isCryptoEntry(entry: EntryInfo): Boolean {
+        val tpl = entry.template
+        return tpl.uuid == TemplateBuilder.UUID_CRYPTO ||
+                tpl.title.equals(TemplateField.LABEL_CRYPTOCURRENCY, ignoreCase = true)
     }
 
     /**
@@ -114,17 +184,9 @@ object VaultNodeFilter {
             for (i in childEntries.indices) {
                 val entry = childEntries[i]
                 if (!nodeFilter.filter(entry)) continue
-                if (category == VaultCategory.FAVORITES && !isFavoriteRawEntry(entry)) continue
 
                 val entryInfo = database.getEntryInfoFrom(entry)
-                val matches = when (category) {
-                    VaultCategory.ALL -> true
-                    VaultCategory.PASSWORDS -> entryInfo.password.isNotEmpty()
-                    VaultCategory.PASSKEYS -> isPasskeyEntry(entryInfo)
-                    VaultCategory.TOTP -> isTotpEntry(entryInfo)
-                    VaultCategory.FAVORITES -> isFavoriteEntry(entryInfo)
-                }
-                if (matches) {
+                if (matchesCategory(entryInfo, category)) {
                     result.add(
                         SortedEntryInfo(
                             entryToCopy = entryInfo,

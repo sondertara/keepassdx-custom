@@ -23,7 +23,12 @@ enum class EntryType {
     TOTP,
     PASSKEY,
     CREDIT_CARD,
-    SECURE_NOTE;
+    SECURE_NOTE,
+    EMAIL,
+    WIFI,
+    ID_CARD,
+    BANK,
+    CRYPTOCURRENCY;
 
     companion object {
         const val KEY_ENTRY_TYPE = "EXTRA_ENTRY_TYPE"

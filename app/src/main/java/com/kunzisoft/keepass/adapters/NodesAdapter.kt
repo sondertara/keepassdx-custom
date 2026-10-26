@@ -49,6 +49,7 @@ import com.kunzisoft.keepass.model.PasskeyEntryFields
 import com.kunzisoft.keepass.model.SortedEntryInfo
 import com.kunzisoft.keepass.model.SortedGroupInfo
 import com.kunzisoft.keepass.model.SortedNodeInfo
+import com.kunzisoft.keepass.model.VaultNodeFilter
 import com.kunzisoft.keepass.settings.PreferencesUtil
 import com.kunzisoft.keepass.view.AvatarHelper
 import com.kunzisoft.keepass.view.OtpDisplayView
@@ -315,34 +316,8 @@ class NodesAdapter(
             strikeOut(node.isCurrentlyExpires)
             underline(node.isReferenced)
         }
-        // Tags
-        holder.tags.apply {
-            val tags = node.tags
-            if (mShowTags && tags.isNotEmpty()) {
-                val tagsAdapter = TagsAdapter(this.context, TagsAdapter.TagViewType.SMALL)
-                layoutManager = LinearLayoutManager(
-                    context,
-                    LinearLayoutManager.HORIZONTAL,
-                    false
-                )
-                adapter = tagsAdapter
-                tagsAdapter.setTags(tags)
-                tagsAdapter.toggleSelection(isSelected)
-                tagsAdapter.onItemClickListener = object : TagsAdapter.OnItemClickListener {
-                    override fun onItemClick(item: Tag) {
-                        mNodeClickCallback?.onNodeClick(node)
-                    }
-
-                    override fun onItemLongClick(item: Tag): Boolean {
-                        mNodeClickCallback?.onNodeLongClick(node)
-                        return true
-                    }
-                }
-                visibility = View.VISIBLE
-            } else {
-                visibility = View.GONE
-            }
-        }
+        // Custom tags are no longer displayed on list cards; unified category pill badge is used instead
+        holder.tags.visibility = View.GONE
         // Add meta text to show UUID
         holder.meta.apply {
             val nodeId = node.nodeId.toVisualString()
@@ -389,71 +364,65 @@ class NodesAdapter(
             // OTP inline display
             holder.otpDisplay?.setOtpModel(node.otpModel)
 
-            // Category Pill Badge on the right of Row 1
-            val templateTitle = node.template?.title
-            val hasOtp = node.otpModel != null || templateTitle.equals(TemplateField.LABEL_TOTP, ignoreCase = true) || node.tags.contains("TOTP") || node.tags.contains("2FA")
-            val hasPasskey = node.passkey != null || templateTitle.equals(PasskeyEntryFields.PASSKEY_FIELD, ignoreCase = true) || node.tags.contains("Passkey")
-            val hasCreditCard = node.creditCard?.number?.isNotEmpty() == true || templateTitle.equals(TemplateField.LABEL_DEBIT_CREDIT_CARD, ignoreCase = true) || node.tags.contains("银行卡") || node.tags.contains("CreditCard")
-            val isSecureNote = !hasOtp && !hasPasskey && !hasCreditCard
-                    && (templateTitle.equals(TemplateField.LABEL_SECURE_NOTE, ignoreCase = true) || node.tags.contains("安全便签") || node.tags.contains("SecureNote") || (node.username.isEmpty() && node.password.isEmpty() && node.notes.isNotEmpty()))
-
+            // Category Pill Badge on the right of Row 1 (strictly unified with the 10 official templates)
+            val templateTitle = node.template.title
             holder.badgeTotp?.let { badgeView ->
                 when {
-                    hasOtp -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        "2FA",
-                        Color.parseColor("#10B981"),
-                        Color.parseColor("#1F10B981")
-                    )
-                    hasPasskey -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.entry_badge_passkey),
-                        Color.parseColor("#6366F1"),
-                        Color.parseColor("#1F6366F1")
-                    )
-                    hasCreditCard -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.entry_badge_card),
-                        Color.parseColor("#F59E0B"),
-                        Color.parseColor("#1FF59E0B")
-                    )
-                    templateTitle.equals(TemplateField.LABEL_WIRELESS, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        "Wi-Fi",
-                        Color.parseColor("#06B6D4"),
-                        Color.parseColor("#1F06B6D4")
-                    )
-                    templateTitle.equals(TemplateField.LABEL_EMAIL, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                    VaultNodeFilter.isEmailEntry(node) -> AvatarHelper.bindCategoryBadge(
                         badgeView,
                         context.getString(R.string.email),
                         Color.parseColor("#3B82F6"),
                         Color.parseColor("#1F3B82F6")
                     )
-                    templateTitle.equals(TemplateField.LABEL_ID_CARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                    VaultNodeFilter.isWifiEntry(node) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.wireless),
+                        Color.parseColor("#06B6D4"),
+                        Color.parseColor("#1F06B6D4")
+                    )
+                    VaultNodeFilter.isIdCardEntry(node) -> AvatarHelper.bindCategoryBadge(
                         badgeView,
                         context.getString(R.string.id_card),
                         Color.parseColor("#8B5CF6"),
                         Color.parseColor("#1F8B5CF6")
                     )
-                    templateTitle.equals(TemplateField.LABEL_BANK, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                    VaultNodeFilter.isBankEntry(node) -> AvatarHelper.bindCategoryBadge(
                         badgeView,
                         context.getString(R.string.bank),
                         Color.parseColor("#0284C7"),
                         Color.parseColor("#1F0284C7")
                     )
-                    templateTitle.equals(TemplateField.LABEL_CRYPTOCURRENCY, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                    VaultNodeFilter.isCryptoEntry(node) -> AvatarHelper.bindCategoryBadge(
                         badgeView,
                         context.getString(R.string.cryptocurrency),
                         Color.parseColor("#EC4899"),
                         Color.parseColor("#1FEC4899")
                     )
-                    isSecureNote -> AvatarHelper.bindCategoryBadge(
+                    VaultNodeFilter.isCreditCardEntry(node) -> AvatarHelper.bindCategoryBadge(
                         badgeView,
-                        context.getString(R.string.entry_badge_note),
+                        context.getString(R.string.debit_credit_card),
+                        Color.parseColor("#F59E0B"),
+                        Color.parseColor("#1FF59E0B")
+                    )
+                    VaultNodeFilter.isTotpEntry(node) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.template_totp),
+                        Color.parseColor("#10B981"),
+                        Color.parseColor("#1F10B981")
+                    )
+                    VaultNodeFilter.isPasskeyEntry(node) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.passkey),
+                        Color.parseColor("#6366F1"),
+                        Color.parseColor("#1F6366F1")
+                    )
+                    VaultNodeFilter.isSecureNoteEntry(node) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.secure_note),
                         Color.parseColor("#14B8A6"),
                         Color.parseColor("#1F14B8A6")
                     )
-                    !templateTitle.isNullOrBlank() && !templateTitle.equals(TemplateField.LABEL_STANDARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                    templateTitle.isNotBlank() && !templateTitle.equals(TemplateField.LABEL_STANDARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
                         badgeView,
                         TemplateField.getLocalizedName(context, templateTitle),
                         Color.parseColor("#8B5CF6"),
@@ -461,7 +430,7 @@ class NodesAdapter(
                     )
                     else -> AvatarHelper.bindCategoryBadge(
                         badgeView,
-                        context.getString(R.string.entry_badge_password),
+                        context.getString(R.string.standard),
                         Color.parseColor("#4D6BFE"),
                         Color.parseColor("#1F4D6BFE")
                     )

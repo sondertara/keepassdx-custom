@@ -191,6 +191,34 @@ class EntryEditViewModel: NodeEditViewModel() {
                 info.password = charArrayOf()
                 info.url = ""
             }
+            EntryType.EMAIL -> {
+                info.template = TemplateBuilder().email
+                info.icon = IconImage(IconImageStandard(IconImageStandard.EMAIL_ID))
+            }
+            EntryType.WIFI -> {
+                info.template = TemplateBuilder().wifi
+                info.icon = IconImage(IconImageStandard(IconImageStandard.WIRELESS_ID))
+                info.username = ""
+                info.url = ""
+            }
+            EntryType.ID_CARD -> {
+                info.template = TemplateBuilder().idCard
+                info.icon = IconImage(IconImageStandard(IconImageStandard.ID_CARD_ID))
+                info.username = ""
+                info.password = charArrayOf()
+                info.url = ""
+            }
+            EntryType.BANK -> {
+                info.template = TemplateBuilder().bank
+                info.icon = IconImage(IconImageStandard(IconImageStandard.DOLLAR_ID))
+            }
+            EntryType.CRYPTOCURRENCY -> {
+                info.template = TemplateBuilder().cryptocurrency
+                info.icon = IconImage(IconImageStandard(IconImageStandard.STAR_ID))
+                info.username = ""
+                info.password = charArrayOf()
+                info.url = ""
+            }
         }
     }
 
