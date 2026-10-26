@@ -96,11 +96,13 @@ class EntryEditViewModel: NodeEditViewModel() {
 
     private var initialized = false
 
+    private var mEntryType: EntryType = EntryType.PASSWORD
+
     fun onDatabaseLoaded(database: ContextualDatabase) {
         mDatabase = database
         allowCustomFields = database.allowEntryCustomFields() == true
         allowOTP = database.allowOTP == true
-        loadTemplateEntry(mEntryId, mParentId, mRegisterInfo)
+        loadTemplateEntry(mEntryId, mParentId, mRegisterInfo, mEntryType)
     }
 
     fun loadTemplateEntry(
@@ -109,6 +111,7 @@ class EntryEditViewModel: NodeEditViewModel() {
         registerInfo: RegisterInfo?,
         entryType: EntryType = EntryType.PASSWORD
     ) {
+        this.mEntryType = entryType
         if (this.mEntryId == entryId
             && this.mParentId == parentId
             && this.mRegisterInfo == registerInfo
@@ -171,7 +174,7 @@ class EntryEditViewModel: NodeEditViewModel() {
                 info.template = TemplateBuilder().creditCard
                 info.icon = IconImage(IconImageStandard(IconImageStandard.CREDIT_CARD_ID))
                 info.username = ""
-                info.password = ""
+                info.password = charArrayOf()
                 info.url = ""
                 info.tags.put("Credit Card")
             }
@@ -179,7 +182,7 @@ class EntryEditViewModel: NodeEditViewModel() {
                 info.template = TemplateBuilder().notes
                 info.icon = IconImage(IconImageStandard(IconImageStandard.LIST_ID))
                 info.username = ""
-                info.password = ""
+                info.password = charArrayOf()
                 info.url = ""
                 info.tags.put("Secure Note")
             }
@@ -190,7 +193,7 @@ class EntryEditViewModel: NodeEditViewModel() {
             EntryType.PASSKEY -> {
                 info.template = TemplateBuilder().passkey
                 info.icon = IconImage(IconImageStandard(IconImageStandard.KEY_ID))
-                info.password = ""
+                info.password = charArrayOf()
                 info.url = ""
                 info.tags.put(PasskeyEntryFields.PASSKEY_TAG)
             }
