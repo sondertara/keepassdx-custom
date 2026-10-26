@@ -614,17 +614,4 @@
     <style name="KeepassDXStyle.Light.Dynamic" parent="KeepassDXStyle.Light" />
     <style name="KeepassDXStyle.Night.Dynamic" parent="KeepassDXStyle.Night" />
 
-    <!-- Bottom Sheet Dialog -->
-    <style name="KeepassDXStyle.BottomSheetDialog" parent="Theme.Material3.DayNight.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/KeepassDXStyle.BottomSheetModal</item>
-    </style>
-    <style name="KeepassDXStyle.BottomSheetModal" parent="Widget.Material3.BottomSheet.Modal">
-        <item name="backgroundTint">?attr/colorSurface</item>
-        <item name="shapeAppearance">@style/KeepassDXStyle.ShapeAppearance.BottomSheet</item>
-    </style>
-    <style name="KeepassDXStyle.ShapeAppearance.BottomSheet" parent="ShapeAppearance.Material3.Corner.None">
-        <item name="cornerSizeTopLeft">20dp</item>
-        <item name="cornerSizeTopRight">20dp</item>
-    </style>
-
 </resources>
