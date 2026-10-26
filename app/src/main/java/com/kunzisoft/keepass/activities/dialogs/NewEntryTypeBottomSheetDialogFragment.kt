@@ -35,6 +35,7 @@ class NewEntryTypeBottomSheetDialogFragment : BottomSheetDialogFragment() {
         fun onTypeSelected(type: EntryType)
         fun onTotpScanQr()
         fun onTotpPickImage()
+        fun onTotpImportLink()
         fun onGroupSelected()
     }
 
@@ -90,6 +91,11 @@ class NewEntryTypeBottomSheetDialogFragment : BottomSheetDialogFragment() {
         view.findViewById<View>(R.id.btn_totp_gallery)?.setOnClickListener {
             dismiss()
             listener?.onTotpPickImage()
+        }
+
+        view.findViewById<View>(R.id.btn_totp_link)?.setOnClickListener {
+            dismiss()
+            listener?.onTotpImportLink()
         }
 
         view.findViewById<View>(R.id.btn_totp_manual)?.setOnClickListener {

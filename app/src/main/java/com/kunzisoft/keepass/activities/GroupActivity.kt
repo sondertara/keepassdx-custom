@@ -20,8 +20,13 @@ package com.kunzisoft.keepass.activities
 
 import android.app.Activity
 import android.app.SearchManager
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.text.InputType
+import android.widget.FrameLayout
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Build
@@ -874,6 +879,10 @@ class GroupActivity : DatabaseLockActivity() {
                 launchPickImageForOtp()
             }
 
+            override fun onTotpImportLink() {
+                launchImportLinkForOtp()
+            }
+
             override fun onGroupSelected() {
                 launchDialogForGroupCreation()
             }
@@ -948,6 +957,62 @@ class GroupActivity : DatabaseLockActivity() {
                     mPickImageOtpLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
+                }
+            }
+        }
+    }
+
+    private fun launchImportLinkForOtp() {
+        mDatabase?.let { database ->
+            if (database.loaded && !database.isReadOnly) {
+                if (TimeoutHelper.checkTimeAndLockIfTimeout(this)) {
+                    var clipboardText = ""
+                    try {
+                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                        val clip = clipboard?.primaryClip
+                        if (clip != null && clip.itemCount > 0) {
+                            val item = clip.getItemAt(0)?.text?.toString()?.trim()
+                            if (item != null && (item.startsWith("otpauth://", ignoreCase = true)
+                                        || item.startsWith("otpauth-migration://", ignoreCase = true)
+                                        || item.replace(" ", "").matches(Regex("^[A-Z2-7=]{16,128}$")))) {
+                                clipboardText = item
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(this.javaClass.name, "Error checking clipboard for OTP", e)
+                    }
+
+                    val container = FrameLayout(this).apply {
+                        val pad = (20 * resources.displayMetrics.density).toInt()
+                        val padTop = (8 * resources.displayMetrics.density).toInt()
+                        setPadding(pad, padTop, pad, 0)
+                    }
+                    val inputLayout = TextInputLayout(this).apply {
+                        hint = getString(R.string.dialog_import_totp_hint)
+                    }
+                    val inputEditText = TextInputEditText(this).apply {
+                        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+                        if (clipboardText.isNotEmpty()) {
+                            setText(clipboardText)
+                            setSelection(clipboardText.length)
+                        }
+                    }
+                    inputLayout.addView(inputEditText)
+                    container.addView(inputLayout)
+
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.dialog_import_totp_title)
+                        .setView(container)
+                        .setPositiveButton(android.R.string.ok) { _, _ ->
+                            val text = inputEditText.text?.toString()?.trim().orEmpty()
+                            if (text.isNotEmpty()) {
+                                handleScannedOtpResult(text)
+                            } else {
+                                Toast.makeText(this, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
                 }
             }
         }

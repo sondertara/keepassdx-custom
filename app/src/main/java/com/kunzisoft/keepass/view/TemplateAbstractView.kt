@@ -780,7 +780,7 @@ abstract class TemplateAbstractView<
         notReferencedFieldsContainerView.addView(view)
     }
 
-    fun putOtpElement(otpElement: OtpElement) {
+    open fun putOtpElement(otpElement: OtpElement) {
         val otpField = OtpEntryFields.buildOtpField(otpElement,
             mEntryInfo?.title, mEntryInfo?.username)
         putCustomField(Field(otpField.name, otpField.protectedValue))

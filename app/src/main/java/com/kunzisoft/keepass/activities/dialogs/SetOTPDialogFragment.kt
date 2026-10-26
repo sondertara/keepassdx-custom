@@ -21,9 +21,13 @@ package com.kunzisoft.keepass.activities.dialogs
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputType
 import android.text.TextWatcher
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -31,10 +35,13 @@ import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.kunzisoft.keepass.R
 import com.kunzisoft.keepass.model.OtpModel
@@ -117,6 +124,60 @@ class SetOTPDialogFragment : DatabaseDialogFragment() {
                 }
             }
         }
+    }
+
+    private fun showPasteLinkDialog() {
+        val ctx = context ?: return
+        var clipboardText = ""
+        try {
+            val clipboard = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            val clip = clipboard?.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                val item = clip.getItemAt(0)?.text?.toString()?.trim()
+                if (item != null && (item.startsWith("otpauth://", ignoreCase = true)
+                            || item.replace(" ", "").matches(Regex("^[A-Z2-7=]{16,128}$")))) {
+                    clipboardText = item
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SetOTPDialog", "Error checking clipboard for OTP", e)
+        }
+
+        val container = FrameLayout(ctx).apply {
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            val padTop = (8 * resources.displayMetrics.density).toInt()
+            setPadding(pad, padTop, pad, 0)
+        }
+        val inputLayout = TextInputLayout(ctx).apply {
+            hint = getString(R.string.dialog_import_totp_hint)
+        }
+        val inputEditText = TextInputEditText(ctx).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            if (clipboardText.isNotEmpty()) {
+                setText(clipboardText)
+                setSelection(clipboardText.length)
+            }
+        }
+        inputLayout.addView(inputEditText)
+        container.addView(inputLayout)
+
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle(R.string.dialog_import_totp_title)
+            .setView(container)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val text = inputEditText.text?.toString()?.trim().orEmpty()
+                if (text.isNotEmpty()) {
+                    val parsed = OtpEntryQuickCreator.parse(text)
+                    if (parsed != null) {
+                        applyParsedOtp(parsed)
+                        Toast.makeText(context, R.string.otp_element_saved, Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, R.string.qr_invalid_otp, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private var mSuggestedTitle: String? = null
@@ -233,6 +294,9 @@ class SetOTPDialogFragment : DatabaseDialogFragment() {
                 mPickImageOtpLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                 )
+            }
+            root?.findViewById<View>(R.id.button_paste_otp_dialog)?.setOnClickListener {
+                showPasteLinkDialog()
             }
 
             // To fix init element

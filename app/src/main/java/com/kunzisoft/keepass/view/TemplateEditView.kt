@@ -17,6 +17,7 @@ import com.kunzisoft.keepass.database.element.template.TemplateAttribute
 import com.kunzisoft.keepass.database.element.template.TemplateAttributeAction
 import com.kunzisoft.keepass.database.element.template.TemplateField
 import com.kunzisoft.keepass.database.helper.getLocalizedName
+import com.kunzisoft.keepass.database.helper.isOtpLabel
 import com.kunzisoft.keepass.database.helper.isStandardPasswordName
 import com.kunzisoft.keepass.model.AppOriginEntryField
 import com.kunzisoft.keepass.model.CreditCardEntryFields
@@ -24,6 +25,7 @@ import com.kunzisoft.keepass.model.DataDate
 import com.kunzisoft.keepass.model.DataTime
 import com.kunzisoft.keepass.model.FieldProtection
 import com.kunzisoft.keepass.model.PasskeyEntryFields
+import com.kunzisoft.keepass.otp.OtpElement
 import com.kunzisoft.keepass.otp.OtpEntryFields
 
 
@@ -56,6 +58,11 @@ class TemplateEditView @JvmOverloads constructor(
     private var mOnDateInstantClickListener: ((DateInstant) -> Unit)? = null
     fun setOnDateInstantClickListener(listener: ((DateInstant) -> Unit)?) {
         this.mOnDateInstantClickListener = listener
+    }
+
+    private var mOnSetupOtpClickListener: (() -> Unit)? = null
+    fun setOnSetupOtpClickListener(listener: (() -> Unit)?) {
+        this.mOnSetupOtpClickListener = listener
     }
 
     fun setOnIconClickListener(onClickListener: OnClickListener) {
@@ -127,10 +134,18 @@ class TemplateEditView @JvmOverloads constructor(
     ): TextEditFieldView? {
         return context?.let {
             var buildTextEditView = TextEditFieldView(it)
-            val needUserVerificationToReveal = true
+            var needUserVerificationToReveal = true
             when {
                 TemplateField.isStandardPasswordName(context, templateAttribute.label) -> {
                     buildTextEditView = PasswordTextEditFieldView(it)
+                }
+                TemplateField.isOtpLabel(context, templateAttribute.label) -> {
+                    buildTextEditView = OtpTextEditFieldView(it).apply {
+                        onOtpSetupClickListener = {
+                            mOnSetupOtpClickListener?.invoke()
+                        }
+                    }
+                    needUserVerificationToReveal = false
                 }
             }
             buildTextEditView.apply {
@@ -181,6 +196,11 @@ class TemplateEditView @JvmOverloads constructor(
     private fun setActionClick(templateAttribute: TemplateAttribute,
                                field: Field,
                                view: GenericTextFieldView) {
+        if (view is OtpTextEditFieldView) {
+            view.label = templateAttribute.alias
+                ?: TemplateField.getLocalizedName(context, field.name)
+            return
+        }
         view.apply {
             applyFontVisibility(mFontInVisibility)
             label = templateAttribute.alias
@@ -287,7 +307,33 @@ class TemplateEditView @JvmOverloads constructor(
         refreshIcon()
         applyBackgroundColor(mEntryInfo?.backgroundColor)
         applyForegroundColor(mEntryInfo?.foregroundColor)
-        return super.populateViewsWithEntryInfo(showEmptyFields)
+        val emptyCustomFields = super.populateViewsWithEntryInfo(showEmptyFields)
+        refreshOtpView()
+        return emptyCustomFields
+    }
+
+    private fun getOtpEditView(): OtpTextEditFieldView? {
+        val view = getViewFieldByName(OtpEntryFields.OTP_TOKEN_FIELD)?.view
+        return view as? OtpTextEditFieldView
+    }
+
+    fun refreshOtpView() {
+        val otpView = getOtpEditView() ?: return
+        val otpModel = mEntryInfo?.otpModel
+            ?: OtpEntryFields.parseFields { key -> getCustomFieldOrNull(key)?.protectedValue?.charArrayValue }?.otpModel
+        if (otpModel != null) {
+            val typeStr = otpModel.type?.name ?: "TOTP"
+            otpView.setOtpState(hasOtp = true, otpType = typeStr)
+            getViewFieldByName(OtpEntryFields.OTP_FIELD)?.view?.isVisible = false
+        } else {
+            otpView.setOtpState(hasOtp = false, otpType = null)
+        }
+    }
+
+    override fun putOtpElement(otpElement: OtpElement) {
+        super.putOtpElement(otpElement)
+        mEntryInfo?.otpModel = otpElement.otpModel
+        refreshOtpView()
     }
 
     override fun populateEntryInfoWithViews(

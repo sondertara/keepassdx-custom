@@ -21,6 +21,7 @@ package com.kunzisoft.keepass.database.element.template
 import com.kunzisoft.keepass.database.element.icon.IconImage
 import com.kunzisoft.keepass.database.element.icon.IconImageStandard
 import com.kunzisoft.keepass.model.PasskeyEntryFields
+import com.kunzisoft.keepass.otp.OtpEntryFields.OTP_TOKEN_FIELD
 import java.util.UUID
 
 class TemplateBuilder {
@@ -110,6 +111,10 @@ class TemplateBuilder {
     )
     private val tokenAttribute = TemplateAttribute(
         label = TemplateField.LABEL_TOKEN,
+        type = TemplateAttributeType.TEXT
+    )
+    private val otpTokenAttribute = TemplateAttribute(
+        label = OTP_TOKEN_FIELD,
         type = TemplateAttributeType.TEXT
     )
     private val publicKeyAttribute = TemplateAttribute(
@@ -300,6 +305,7 @@ class TemplateBuilder {
             val sections = mutableListOf<TemplateSection>()
             val mainSection = TemplateSection(mutableListOf<TemplateAttribute>().apply {
                 add(usernameAttribute)
+                add(otpTokenAttribute)
                 add(urlAttribute)
                 add(notesAttribute)
             })

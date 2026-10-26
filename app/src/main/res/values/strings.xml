@@ -893,7 +893,13 @@
     <string name="credential_type_group_desc">Create a folder to organize your vault</string>
     <string name="totp_action_scan">Scan QR</string>
     <string name="totp_action_gallery">From Gallery</string>
+    <string name="totp_action_link">Import Link</string>
     <string name="totp_action_manual">Manual Entry</string>
+    <string name="totp_paste_link">Paste Link</string>
+    <string name="dialog_import_totp_title">Import 2FA / TOTP</string>
+    <string name="dialog_import_totp_hint">Paste otpauth:// URL or Base32 secret key</string>
+    <string name="totp_field_configured">Configured (%s)</string>
+    <string name="totp_field_unconfigured">Tap to set up One-Time Password</string>
     <string name="entry_badge_password">Login</string>
     <string name="entry_badge_passkey">Passkey</string>
     <string name="entry_badge_card">Card</string>

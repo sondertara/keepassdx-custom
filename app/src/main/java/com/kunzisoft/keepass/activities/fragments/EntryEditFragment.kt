@@ -102,6 +102,9 @@ class EntryEditFragment: DatabaseFragment() {
             view.isVisible = false
         }
         templateView = view.findViewById(R.id.template_view)
+        templateView.setOnSetupOtpClickListener {
+            mEntryEditViewModel.setupOtp()
+        }
         attachmentsContainerView = view.findViewById(R.id.entry_attachments_container)
         attachmentsListView = view.findViewById(R.id.entry_attachments_list)
         tagsContainerView = view.findViewById(R.id.entry_tags_label)

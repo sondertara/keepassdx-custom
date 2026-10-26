@@ -856,7 +856,13 @@
     <string name="credential_type_group_desc">创建文件夹分类管理密码库</string>
     <string name="totp_action_scan">扫码添加</string>
     <string name="totp_action_gallery">相册识别</string>
+    <string name="totp_action_link">链接导入</string>
     <string name="totp_action_manual">手动输入</string>
+    <string name="totp_paste_link">粘贴链接</string>
+    <string name="dialog_import_totp_title">导入动态验证码 (TOTP)</string>
+    <string name="dialog_import_totp_hint">粘贴 otpauth:// 链接或 Base32 密钥</string>
+    <string name="totp_field_configured">已配置 (%s)</string>
+    <string name="totp_field_unconfigured">未配置动态口令，点击进行配置</string>
     <string name="entry_badge_password">密码</string>
     <string name="entry_badge_passkey">通行密钥</string>
     <string name="entry_badge_card">银行卡</string>
