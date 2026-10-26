@@ -28,6 +28,7 @@ import com.kunzisoft.keepass.database.element.node.EmptyNodeFilter
 import com.kunzisoft.keepass.database.element.node.Node
 import com.kunzisoft.keepass.database.element.node.NodeFilter
 import com.kunzisoft.keepass.database.element.node.Nodes
+import com.kunzisoft.keepass.database.element.template.TemplateBuilder
 import com.kunzisoft.keepass.database.search.SearchHelper
 import com.kunzisoft.keepass.database.search.SearchParameters
 import com.kunzisoft.keepass.model.CreditCardEntryFields.setCreditCard
@@ -130,6 +131,24 @@ open class DatabaseInfo: Database() {
 
             if (!raw)
                 stopManageEntry(this)
+        }
+        if (entryInfo.template == null) {
+            when {
+                entryInfo.otpModel != null && entryInfo.password.isEmpty() -> {
+                    entryInfo.template = TemplateBuilder().totp
+                }
+                entryInfo.passkey != null && entryInfo.password.isEmpty() -> {
+                    entryInfo.template = TemplateBuilder().passkey
+                }
+                entryInfo.creditCard?.number?.isNotEmpty() == true -> {
+                    entryInfo.template = TemplateBuilder().creditCard
+                }
+                entryInfo.username.isEmpty() && entryInfo.password.isEmpty()
+                        && entryInfo.notes.isNotEmpty()
+                        && entryInfo.otpModel == null && entryInfo.passkey == null -> {
+                    entryInfo.template = TemplateBuilder().notes
+                }
+            }
         }
         return entryInfo
     }

@@ -1,6 +1,6 @@
 package com.kunzisoft.keepass.otp.scanner
 
-import com.kunzisoft.keepass.otp.OtpEntryFields
+import com.kunzisoft.keepass.database.element.template.TemplateBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -23,7 +23,7 @@ class OtpEntryQuickCreatorTest {
         val entry = OtpEntryQuickCreator.buildEntryInfo(parsed)
         assertEquals("GitHub", entry.title)
         assertEquals("alice@example.com", entry.username)
-        assertTrue(entry.tags.contains(OtpEntryFields.OTP_TAG))
+        assertEquals(TemplateBuilder.UUID_TOTP, entry.template?.uuid)
     }
 
     @Test

@@ -76,6 +76,8 @@ class EntryEditFragment: DatabaseFragment() {
     private var mAllowMultipleAttachments: Boolean = false
 
     private var mIconColor: Int = 0
+    private var mEntryAssigned: Boolean = false
+    private var mTemplateAssigned: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
@@ -170,8 +172,19 @@ class EntryEditFragment: DatabaseFragment() {
                 launch {
                     mEntryEditViewModel.entryEditUIState.collect { uiState ->
                         // To prevent flickering
-                        if (uiState.loaded)
+                        if (uiState.loaded) {
+                            if (!mEntryAssigned && uiState.entryInfo != null) {
+                                mEntryAssigned = true
+                                assignEntryInfo(uiState.entryInfo)
+                            }
+                            if (!mTemplateAssigned) {
+                                uiState.templates?.defaultTemplate?.let { tpl ->
+                                    mTemplateAssigned = true
+                                    templateView.setTemplate(tpl)
+                                }
+                            }
                             rootView.showByFading()
+                        }
                         // Apply timeout reset
                         resetAppTimeoutWhenViewFocusedOrChanged(rootView)
                     }
@@ -186,9 +199,11 @@ class EntryEditFragment: DatabaseFragment() {
                         when (event) {
                             is EntryEditViewModel.EntryEditEvent.EntryLoaded -> {
                                 // Load entry info only the first time to keep change locally
+                                mEntryAssigned = true
                                 assignEntryInfo(event.entryInfo)
                             }
                             is EntryEditViewModel.EntryEditEvent.OnTemplateChanged -> {
+                                mTemplateAssigned = true
                                 templateView.setTemplate(event.template)
                                 // Handle tags
                                 event.tagsToRemove.forEach {
@@ -248,7 +263,6 @@ class EntryEditFragment: DatabaseFragment() {
                             is EntryEditViewModel.EntryEditEvent.OnOtpCreated -> {
                                 // Update the otp field with otpauth:// url
                                 templateView.putOtpElement(event.otpElement)
-                                tagsCompletionView.addObjectSync(OtpEntryFields.OTP_TAG)
                                 if (!event.suggestedTitle.isNullOrBlank() && templateView.getTitleFromView().isBlank()) {
                                     templateView.setTitleInView(event.suggestedTitle)
                                 }

@@ -126,21 +126,21 @@
 
             </LinearLayout>
 
-            <!-- Right Fixed Column: Inline OTP + Category Pill Badge + Action Menu (⋮) -->
+            <!-- Right Fixed Column: Inline OTP + Action Menu (⋮) -->
             <LinearLayout
                 android:id="@+id/node_right_options"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginStart="8dp">
+                android:layout_marginStart="6dp">
 
                 <!-- Inline Compact OTP Token + Countdown -->
                 <com.kunzisoft.keepass.view.OtpDisplayView
                     android:id="@+id/node_otp_display"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
+                    android:layout_marginEnd="2dp"
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="4dp"
                     android:gravity="center_vertical"
@@ -167,37 +167,6 @@
                     android:contentDescription="@string/passkey"
                     android:src="@drawable/ic_passkey_white_24dp"
                     app:tint="#6366F1"
-                    android:visibility="gone" />
-
-                <!-- Unified Right-Aligned Category Badge -->
-                <TextView
-                    android:id="@+id/node_badge_totp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:background="@drawable/badge_totp_pill"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="3dp"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:text="密码"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="#4D6BFE"
-                    android:visibility="visible" />
-
-                <TextView
-                    android:id="@+id/node_badge_passkey"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:background="@drawable/badge_passkey_pill"
-                    android:paddingHorizontal="7dp"
-                    android:paddingVertical="2dp"
-                    android:text="Passkey"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:textColor="#6366F1"
                     android:visibility="gone" />
 
                 <androidx.appcompat.widget.AppCompatImageView

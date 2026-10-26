@@ -261,6 +261,7 @@ class EntryEditActivity : DatabaseLockActivity() {
                                             iconDrawableFactory = mDatabase?.iconDrawableFactory
                                         }
                                         mLastSelectedTemplatePosition = targetIndex
+                                        onItemSelectedListener = null
                                         adapter = mTemplatesSelectorAdapter
                                         setSelection(targetIndex, false)
                                         onItemSelectedListener =
@@ -273,9 +274,10 @@ class EntryEditActivity : DatabaseLockActivity() {
                                                 ) {
                                                     if (!mTemplateSpinnerInitialized) {
                                                         mTemplateSpinnerInitialized = true
-                                                        if (position == targetIndex) {
-                                                            return
+                                                        if (position != mLastSelectedTemplatePosition) {
+                                                            setSelection(mLastSelectedTemplatePosition, false)
                                                         }
+                                                        return
                                                     }
                                                     if (position != mLastSelectedTemplatePosition) {
                                                         mLastSelectedTemplatePosition = position
@@ -288,7 +290,7 @@ class EntryEditActivity : DatabaseLockActivity() {
                                         visibility = View.GONE
                                     }
                                 } else {
-                                    if (targetIndex != mLastSelectedTemplatePosition) {
+                                    if (targetIndex != mLastSelectedTemplatePosition || selectedItemPosition != targetIndex) {
                                         mLastSelectedTemplatePosition = targetIndex
                                         setSelection(targetIndex, false)
                                     }

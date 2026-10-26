@@ -92,6 +92,10 @@ abstract class TemplateEngine(private val mDatabase: DatabaseKDBX) {
                         return newTemplate
                     }
                 }
+                getDefaults().firstOrNull { it.uuid == uuid }?.let { defaultTemplate ->
+                    mCacheTemplates[uuid] = defaultTemplate
+                    return defaultTemplate
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Unable to get Entry by $uuid", e)

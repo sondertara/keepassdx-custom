@@ -156,11 +156,6 @@ class EntryEditViewModel: NodeEditViewModel() {
                             applyEntryTypeToNewEntry(info, entryType)
                         }
                         loadEntryInfo(database, newEntryInfo)
-                        if (entryType == EntryType.TOTP) {
-                            withContext(Dispatchers.Main) {
-                                _entryEditEvents.emit(EntryEditEvent.RequestSetupOTP)
-                            }
-                        }
                     }
                 }
             }
@@ -178,7 +173,6 @@ class EntryEditViewModel: NodeEditViewModel() {
                 info.username = ""
                 info.password = charArrayOf()
                 info.url = ""
-                info.tags.put("Credit Card")
             }
             EntryType.SECURE_NOTE -> {
                 info.template = TemplateBuilder().notes
@@ -186,21 +180,46 @@ class EntryEditViewModel: NodeEditViewModel() {
                 info.username = ""
                 info.password = charArrayOf()
                 info.url = ""
-                info.tags.put("Secure Note")
             }
             EntryType.TOTP -> {
                 info.template = TemplateBuilder().totp
                 info.icon = IconImage(IconImageStandard(IconImageStandard.KEY_ID))
-                info.tags.put(OtpEntryFields.OTP_TAG)
             }
             EntryType.PASSKEY -> {
                 info.template = TemplateBuilder().passkey
                 info.icon = IconImage(IconImageStandard(IconImageStandard.KEY_ID))
                 info.password = charArrayOf()
                 info.url = ""
-                info.tags.put(PasskeyEntryFields.PASSKEY_TAG)
             }
         }
+    }
+
+    private fun inferTemplateForEntry(entryInfo: EntryInfo?): Template {
+        if (entryInfo == null) return Template.STANDARD
+        val current = entryInfo.template
+        if (current != null && current != Template.STANDARD) {
+            return current
+        }
+        val hasOtp = entryInfo.otpModel != null ||
+            entryInfo.customFields.any { it.name.equals(OtpEntryFields.OTP_FIELD, ignoreCase = true) }
+        if (hasOtp && entryInfo.password.isEmpty()) {
+            return TemplateBuilder().totp
+        }
+        if (entryInfo.passkey != null && entryInfo.password.isEmpty()) {
+            return TemplateBuilder().passkey
+        }
+        if (entryInfo.creditCard?.number?.isNotEmpty() == true) {
+            return TemplateBuilder().creditCard
+        }
+        if (entryInfo.username.isEmpty() &&
+            entryInfo.password.isEmpty() &&
+            entryInfo.notes.isNotEmpty() &&
+            !hasOtp &&
+            entryInfo.passkey == null
+        ) {
+            return TemplateBuilder().notes
+        }
+        return current ?: Template.STANDARD
     }
 
     private suspend fun loadEntryInfo(database: ContextualDatabase, entryInfo: EntryInfo?) {
@@ -216,7 +235,7 @@ class EntryEditViewModel: NodeEditViewModel() {
                 }
             }
         }
-        val selectedTemplate = entryInfo?.template ?: Template.STANDARD
+        val selectedTemplate = inferTemplateForEntry(entryInfo)
         mPreviousTemplateTags = Tags(selectedTemplate.tags)
         val dbTemplates = database.getTemplates(isTemplate)
         val allTemplates = mutableListOf<Template>()
@@ -281,14 +300,6 @@ class EntryEditViewModel: NodeEditViewModel() {
                 tagsToRemove = tagsToRemove,
                 tagsToAdd = tagsToAdd
             ))
-
-            // If switching to TOTP template and no OTP configured yet, prompt setup
-            if (template.title.equals(TemplateField.LABEL_TOTP, ignoreCase = true) ||
-                template.uuid == TemplateBuilder.UUID_TOTP) {
-                if (_entryEditUIState.value.entryInfo?.otpModel == null) {
-                    _entryEditEvents.emit(EntryEditEvent.RequestSetupOTP)
-                }
-            }
         }
     }
 

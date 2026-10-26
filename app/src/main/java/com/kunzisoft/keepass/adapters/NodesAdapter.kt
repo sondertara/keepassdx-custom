@@ -389,86 +389,6 @@ class NodesAdapter(
             // OTP inline display
             holder.otpDisplay?.setOtpModel(node.otpModel)
 
-            // Category Pill Badge on the right
-            val templateTitle = node.template?.title
-            val hasOtp = node.otpModel != null || node.tags.contains("TOTP") || node.tags.contains("2FA")
-            val hasPasskey = node.passkey != null || node.tags.contains("Passkey")
-            val hasCreditCard = node.creditCard?.number?.isNotEmpty() == true || node.tags.contains("银行卡") || node.tags.contains("CreditCard")
-            val isSecureNote = !hasOtp && !hasPasskey && !hasCreditCard
-                    && (node.tags.contains("安全便签") || node.tags.contains("SecureNote") || (node.username.isEmpty() && node.password.isEmpty() && node.notes.isNotEmpty()))
-
-            holder.badgePasskey?.visibility = View.GONE
-            holder.badgeTotp?.let { badgeView ->
-                when {
-                    hasOtp || templateTitle.equals(TemplateField.LABEL_TOTP, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        "2FA",
-                        Color.parseColor("#10B981"),
-                        Color.parseColor("#1F10B981")
-                    )
-                    hasPasskey || templateTitle.equals(PasskeyEntryFields.PASSKEY_FIELD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.entry_badge_passkey),
-                        Color.parseColor("#6366F1"),
-                        Color.parseColor("#1F6366F1")
-                    )
-                    hasCreditCard || templateTitle.equals(TemplateField.LABEL_DEBIT_CREDIT_CARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.entry_badge_card),
-                        Color.parseColor("#F59E0B"),
-                        Color.parseColor("#1FF59E0B")
-                    )
-                    templateTitle.equals(TemplateField.LABEL_WIRELESS, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        "Wi-Fi",
-                        Color.parseColor("#06B6D4"),
-                        Color.parseColor("#1F06B6D4")
-                    )
-                    templateTitle.equals(TemplateField.LABEL_EMAIL, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.email),
-                        Color.parseColor("#3B82F6"),
-                        Color.parseColor("#1F3B82F6")
-                    )
-                    templateTitle.equals(TemplateField.LABEL_ID_CARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.id_card),
-                        Color.parseColor("#8B5CF6"),
-                        Color.parseColor("#1F8B5CF6")
-                    )
-                    templateTitle.equals(TemplateField.LABEL_BANK, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.bank),
-                        Color.parseColor("#0284C7"),
-                        Color.parseColor("#1F0284C7")
-                    )
-                    templateTitle.equals(TemplateField.LABEL_CRYPTOCURRENCY, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.cryptocurrency),
-                        Color.parseColor("#EC4899"),
-                        Color.parseColor("#1FEC4899")
-                    )
-                    isSecureNote || templateTitle.equals(TemplateField.LABEL_SECURE_NOTE, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.entry_badge_note),
-                        Color.parseColor("#14B8A6"),
-                        Color.parseColor("#1F14B8A6")
-                    )
-                    !templateTitle.isNullOrBlank() && !templateTitle.equals(TemplateField.LABEL_STANDARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        TemplateField.getLocalizedName(context, templateTitle),
-                        Color.parseColor("#8B5CF6"),
-                        Color.parseColor("#1F8B5CF6")
-                    )
-                    else -> AvatarHelper.bindCategoryBadge(
-                        badgeView,
-                        context.getString(R.string.entry_badge_password),
-                        Color.parseColor("#4D6BFE"),
-                        Color.parseColor("#1F4D6BFE")
-                    )
-                }
-            }
-
             // Attachment
             holder.attachmentIcon?.visibility =
                 if (node.containsAttachment()) View.VISIBLE else View.GONE
@@ -532,14 +452,6 @@ class NodesAdapter(
                 setTextColor(if (isSelected) mColorOnSecondary else mTextColorSecondary)
             }
             holder.text.setTextColor(if (isSelected) mColorOnSecondary else mTextColor)
-            holder.badgeTotp?.let { badgeView ->
-                AvatarHelper.bindCategoryBadge(
-                    badgeView,
-                    context.getString(R.string.entry_badge_group),
-                    Color.parseColor("#64748B"),
-                    Color.parseColor("#1F64748B")
-                )
-            }
             ViewCompat.setBackgroundTintList(
                 holder.container,
                 ColorStateList.valueOf(if (isSelected) mColorSecondary else mColorSurfaceContainer)
@@ -669,8 +581,6 @@ class NodesAdapter(
         var attachmentIcon: ImageView? = itemView.findViewById(R.id.node_attachment_icon)
         var passkeyIcon: ImageView? = itemView.findViewById(R.id.node_passkey_icon)
         var menuBtn: ImageView? = itemView.findViewById(R.id.node_btn_menu)
-        var badgeTotp: TextView? = itemView.findViewById(R.id.node_badge_totp)
-        var badgePasskey: TextView? = itemView.findViewById(R.id.node_badge_passkey)
     }
 
     companion object {

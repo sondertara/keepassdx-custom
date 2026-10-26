@@ -19,10 +19,14 @@
  */
 package com.kunzisoft.keepass.otp.scanner
 
+import android.net.Uri
 import android.os.Bundle
 import com.kunzisoft.keepass.activities.legacy.DatabaseActivity
 import com.kunzisoft.keepass.database.DatabaseTaskProvider.Companion.startDatabaseService
 import com.kunzisoft.keepass.database.element.GroupId
+import com.kunzisoft.keepass.database.element.icon.IconImage
+import com.kunzisoft.keepass.database.element.icon.IconImageStandard
+import com.kunzisoft.keepass.database.element.template.TemplateBuilder
 import com.kunzisoft.keepass.model.EntryInfo
 import com.kunzisoft.keepass.otp.OtpElement
 import com.kunzisoft.keepass.otp.OtpEntryFields
@@ -62,12 +66,26 @@ object OtpEntryQuickCreator {
 
         val otpElement = OtpEntryFields.parseOTPUri(normalizedUri) ?: return null
 
-        val displayTitle = if (otpElement.isIssuerPopulated()) {
-            otpElement.issuer
-        } else if (otpElement.isNamePopulated()) {
-            otpElement.name
-        } else {
-            "2FA Token"
+        val pathPrefix = try {
+            val rawPath = Uri.parse(normalizedUri).path?.removePrefix("/")?.let { Uri.decode(it) }.orEmpty()
+            if (rawPath.contains(":")) rawPath.substringBefore(":").trim() else ""
+        } catch (_: Exception) {
+            ""
+        }
+
+        val displayTitle = when {
+            pathPrefix.isNotEmpty() && (!otpElement.isIssuerPopulated() || pathPrefix.length > otpElement.issuer.length) -> {
+                pathPrefix
+            }
+            otpElement.isIssuerPopulated() -> {
+                otpElement.issuer
+            }
+            otpElement.isNamePopulated() -> {
+                otpElement.name
+            }
+            else -> {
+                "2FA Token"
+            }
         }
 
         val displayAccount = if (otpElement.isNamePopulated() && otpElement.name != displayTitle) {
@@ -89,11 +107,13 @@ object OtpEntryQuickCreator {
      */
     fun buildEntryInfo(parsedOtp: ParsedOtp): EntryInfo {
         val entry = EntryInfo().apply {
+            template = TemplateBuilder().totp
+            icon = IconImage(IconImageStandard(IconImageStandard.KEY_ID))
             title = parsedOtp.displayTitle
             if (parsedOtp.displayAccount.isNotEmpty()) {
                 username = parsedOtp.displayAccount
             }
-            setOtp(parsedOtp.rawUri, addTag = true)
+            setOtp(parsedOtp.rawUri, addTag = false)
         }
         return entry
     }
