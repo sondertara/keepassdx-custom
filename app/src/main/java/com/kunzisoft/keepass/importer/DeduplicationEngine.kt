@@ -157,7 +157,7 @@ object DeduplicationEngine {
         return if (username.isNotEmpty()) {
             "acct:$effectiveTitle|$username"
         } else {
-            val fallback = passwordStr.ifEmpty { imported.otpUri.trim().ifEmpty { notes } }
+            val fallback = passwordStr.ifEmpty { (imported.totpUriOrSecret ?: "").trim().ifEmpty { notes } }
             if (fallback.isEmpty()) return null
             "acct_nouser:$effectiveTitle|$fallback"
         }
@@ -226,7 +226,7 @@ object DeduplicationEngine {
                 "${existingEntry.notes}\n${imported.notes}"
             }
         }
-        if (imported.otpUri.isNotBlank()) {
+        if (!imported.totpUriOrSecret.isNullOrBlank()) {
             val importedInfo = imported.toEntryInfo()
             importedInfo.otpModel?.let { otpModel ->
                 OtpEntryFields.buildOtpField(OtpElement(otpModel), null, null).let { otpField ->
@@ -234,9 +234,9 @@ object DeduplicationEngine {
                 }
             }
         }
-        for ((k, v) in imported.customFields) {
-            if (k.isNotBlank() && v.isNotBlank()) {
-                existingEntry.putExtraField(Field(k, ProtectedString(false, v)))
+        for ((k, pair) in imported.customFields) {
+            if (k.isNotBlank() && pair.first.isNotBlank()) {
+                existingEntry.putExtraField(Field(k, ProtectedString(pair.second, pair.first)))
             }
         }
         existingEntry.touch(modified = true, touchParents = true)
@@ -282,7 +282,7 @@ object DeduplicationEngine {
                     hasOtp = hasOtp,
                     hasNotes = entry.notes.isNotBlank(),
                     groupPath = path,
-                    lastModifiedTimeMillis = entry.lastModificationTime.date.time,
+                    lastModifiedTimeMillis = entry.lastModificationTime.instant.millis,
                     completenessScore = score
                 )
             }.sortedWith(
