@@ -70,46 +70,38 @@ object PrivilegedAllowLists {
         callingAppInfo: CallingAppInfo,
         context: Context
     ): String? {
-        return try {
-            // Check the custom apps first
+        val customFile = File(context.filesDir, FILE_NAME_PRIVILEGED_APPS_CUSTOM)
+        if (customFile.exists()) {
+            try {
+                getOriginFromPrivilegedAllowListStream(
+                    callingAppInfo = callingAppInfo,
+                    inputStream = customFile.inputStream()
+                )?.let { return it }
+            } catch (_: Exception) {}
+        }
+        try {
+            // Check the Google list (includes Chrome, GMS hybrid authenticator, etc.)
             getOriginFromPrivilegedAllowListStream(
                 callingAppInfo = callingAppInfo,
-                File(context.filesDir, FILE_NAME_PRIVILEGED_APPS_CUSTOM)
-                    .inputStream()
+                inputStream = context.assets.open(FILE_NAME_PRIVILEGED_APPS_GOOGLE)
+            )?.let { return it }
+        } catch (_: Exception) {}
+        return try {
+            // Then the community apps list
+            getOriginFromPrivilegedAllowListStream(
+                callingAppInfo = callingAppInfo,
+                inputStream = context.assets.open(FILE_NAME_PRIVILEGED_APPS_COMMUNITY)
             )
-        } catch (e: Exception) {
-            // Then the Google list if allowed
-            if (BuildConfig.CLOSED_STORE) {
-                try {
-                    // Check the Google list if allowed
-                    // http://www.gstatic.com/gpm-passkeys-privileged-apps/apps.json
-                    getOriginFromPrivilegedAllowListStream(
-                        callingAppInfo = callingAppInfo,
-                        inputStream = context.assets.open(FILE_NAME_PRIVILEGED_APPS_GOOGLE)
-                    )
-                } catch (_: Exception) {
-                    // Then the community apps list
-                    getOriginFromPrivilegedAllowListStream(
-                        callingAppInfo = callingAppInfo,
-                        inputStream = context.assets.open(FILE_NAME_PRIVILEGED_APPS_COMMUNITY)
-                    )
-                }
-            } else {
-                when (e) {
-                    is FileNotFoundException -> {
-                        val attemptApp = AndroidPrivilegedApp(
-                            packageName = callingAppInfo.packageName,
-                            fingerprints = callingAppInfo.signingInfo
-                                .getAllFingerprints() ?: emptySet()
-                        )
-                        throw PrivilegedException(
-                            temptingApp = attemptApp,
-                            message = "$attemptApp is not in the allow list"
-                        )
-                    }
-                    else -> throw e
-                }
-            }
+        } catch (_: Exception) {
+            val attemptApp = AndroidPrivilegedApp(
+                packageName = callingAppInfo.packageName,
+                fingerprints = callingAppInfo.signingInfo
+                    .getAllFingerprints() ?: emptySet()
+            )
+            throw PrivilegedException(
+                temptingApp = attemptApp,
+                message = "$attemptApp is not in the allow list"
+            )
         }
     }
 
@@ -136,9 +128,7 @@ object PrivilegedAllowLists {
         return try {
             val predefinedApps = mutableListOf<AndroidPrivilegedApp>()
             predefinedApps.addAll(retrievePrivilegedApps(context.assets.open(FILE_NAME_PRIVILEGED_APPS_COMMUNITY)))
-            if (BuildConfig.CLOSED_STORE) {
-                predefinedApps.addAll(retrievePrivilegedApps(context.assets.open(FILE_NAME_PRIVILEGED_APPS_GOOGLE)))
-            }
+            predefinedApps.addAll(retrievePrivilegedApps(context.assets.open(FILE_NAME_PRIVILEGED_APPS_GOOGLE)))
             predefinedApps
         } catch (e: Exception) {
             Log.e(PrivilegedAllowLists::class.simpleName, "Error retrieving privileged apps", e)

@@ -334,8 +334,11 @@ open class EntryInfo : NodeInfo {
             expiryTime = it
         }
         setCreditCard(registerInfo.creditCard)
+        registerInfo.creditCard?.let { creditCard = it }
         val dataOverwrite: Boolean = setPasskey(registerInfo.passkey)
+        registerInfo.passkey?.let { passkey = it }
         saveAppOrigin(registerInfo.appOrigin, customFieldsAllowed)
+        registerInfo.appOrigin?.let { appOrigin = it }
         if (title.isEmpty()) {
             title = registerInfo.toString().toTitle()
         }

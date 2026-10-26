@@ -126,6 +126,9 @@ class EntryEditActivity : DatabaseLockActivity() {
     private var templateSelectorSpinner: Spinner? = null
     private var entryEditAddToolBar: ToolbarAction? = null
     private var validateButton: View? = null
+    private var backButton: View? = null
+    private var inlineAddFieldButton: View? = null
+    private var inlineAddAttachmentButton: View? = null
     private var lockView: View? = null
     private var loadingView: ProgressBar? = null
 
@@ -197,12 +200,16 @@ class EntryEditActivity : DatabaseLockActivity() {
         templateSelectorSpinner = findViewById(R.id.entry_edit_template_selector)
         lockView = findViewById(R.id.lock_button)
         validateButton = findViewById(R.id.entry_edit_validate)
+        backButton = findViewById(R.id.entry_edit_back_button)
+        inlineAddFieldButton = findViewById(R.id.btn_inline_add_field)
+        inlineAddAttachmentButton = findViewById(R.id.btn_inline_add_attachment)
         loadingView = findViewById(R.id.loading)
 
-        setSupportActionBar(entryEditAddToolBar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
+        entryEditAddToolBar?.visibility = View.GONE
+        lockView?.visibility = View.GONE
+        backButton?.setOnClickListener { onDatabaseBackPressed() }
+        inlineAddFieldButton?.setOnClickListener { addNewCustomField() }
+        inlineAddAttachmentButton?.setOnClickListener { addNewAttachment() }
 
         // To apply fit window with transparency
         setTransparentNavigationBar(applyToStatusBar = true) {
@@ -242,6 +249,9 @@ class EntryEditActivity : DatabaseLockActivity() {
                             loadingView?.hideByFading()
                         else
                             loadingView?.showByFading()
+
+                        inlineAddFieldButton?.isVisible = uiState.loaded && mEntryEditViewModel.allowCustomFields
+                        inlineAddAttachmentButton?.isVisible = uiState.loaded && !mEntryEditViewModel.isTemplate
 
                         uiState.templates?.let { templatesData ->
                             val templates = templatesData.templates
@@ -618,15 +628,8 @@ class EntryEditActivity : DatabaseLockActivity() {
     override fun onResume() {
         super.onResume()
 
-        lockView?.visibility = if (PreferencesUtil.showLockDatabaseButton(this)) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
-
-        // Padding if lock button visible
-        entryEditAddToolBar?.updateButtonPaddingStart()
-        entryEditAddToolBar?.updateButtonPaddingEnd()
+        lockView?.visibility = View.GONE
+        entryEditAddToolBar?.visibility = View.GONE
 
         // To show the attachment upload progress
         mAttachmentFileBinderManager.apply {

@@ -511,20 +511,20 @@ class PasskeyLauncherViewModel(application: Application): CredentialLauncherView
                 RESULT_OK -> {
                     withContext(Dispatchers.IO) {
                         Log.d(TAG, "Passkey registration result")
-                        val passkey = intent?.retrievePasskey()
+                        val passkey = intent?.retrievePasskey() ?: mPasskey
                         intent?.removePasskey()
                         intent?.removeAppOrigin()
-                        // If registered passkey is the same as the one we want to validate,
-                        if (mPasskey == passkey) {
+                        // Verify registered passkey matches the generated credentialId
+                        if (passkey != null && (mPasskey == null || mPasskey?.credentialId == passkey.credentialId)) {
                             mCreationParameters?.let {
                                 PendingIntentHandler.setCreateCredentialResponse(
                                     intent = responseIntent,
                                     response = buildCreatePublicKeyCredentialResponse(
                                         publicKeyCredentialCreationParameters = it,
                                         userVerified = mUserVerified,
-                                        backupEligibility = passkey?.backupEligibility
+                                        backupEligibility = passkey.backupEligibility
                                             ?: mBackupEligibility,
-                                        backupState = passkey?.backupState
+                                        backupState = passkey.backupState
                                             ?: mBackupState,
                                     )
                                 )

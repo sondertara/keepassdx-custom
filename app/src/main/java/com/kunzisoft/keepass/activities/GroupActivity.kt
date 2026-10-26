@@ -853,15 +853,16 @@ class GroupActivity : DatabaseLockActivity() {
         }
 
         // Add listeners to the add button
-        addNodeButtonView?.addButtonView?.setOnClickListener {
-            showNewEntryTypeBottomSheet()
+        val onFabAddAction: (View) -> Unit = {
+            if (mSpecialMode == SpecialMode.REGISTRATION || mSpecialMode == SpecialMode.SELECTION) {
+                launchCreateEntry(if (mTypeMode == TypeMode.PASSKEY) EntryType.PASSKEY else EntryType.PASSWORD)
+            } else {
+                showNewEntryTypeBottomSheet()
+            }
         }
-        addNodeButtonView?.setMainFabClickListener {
-            showNewEntryTypeBottomSheet()
-        }
-        addNodeButtonView?.setAddEntryClickListener {
-            showNewEntryTypeBottomSheet()
-        }
+        addNodeButtonView?.addButtonView?.setOnClickListener(onFabAddAction)
+        addNodeButtonView?.setMainFabClickListener(onFabAddAction)
+        addNodeButtonView?.setAddEntryClickListener(onFabAddAction)
         addNodeButtonView?.setAddGroupClickListener {
             launchDialogForGroupCreation()
         }
@@ -1870,14 +1871,29 @@ class GroupActivity : DatabaseLockActivity() {
                     // Save info
                     if (database.loaded) {
                         if (!database.isReadOnly) {
-                            launchForRegistration(
-                                context = activity,
-                                database = database,
-                                registerInfo = registerInfo,
-                                typeMode = typeMode,
-                                activityResultLauncher = if (intentSenderMode)
-                                    activityResultLauncher else null
-                            )
+                            val rootGroupId = database.rootGroup?.nodeId
+                            if (typeMode == TypeMode.PASSKEY && rootGroupId != null) {
+                                EntryEditActivity.launchForRegistration(
+                                    context = activity,
+                                    database = database,
+                                    nodeId = rootGroupId,
+                                    registerInfo = registerInfo,
+                                    typeMode = typeMode,
+                                    registrationType = EntryEditActivity.RegistrationType.CREATE,
+                                    entryType = EntryType.PASSKEY,
+                                    activityResultLauncher = if (intentSenderMode)
+                                        activityResultLauncher else null
+                                )
+                            } else {
+                                launchForRegistration(
+                                    context = activity,
+                                    database = database,
+                                    registerInfo = registerInfo,
+                                    typeMode = typeMode,
+                                    activityResultLauncher = if (intentSenderMode)
+                                        activityResultLauncher else null
+                                )
+                            }
                             onLaunchActivitySpecialMode()
                         } else {
                             activity.toastError(RegisterInReadOnlyDatabaseException())

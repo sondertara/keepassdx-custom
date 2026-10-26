@@ -95,6 +95,7 @@ android {
     sourceSets {
         getByName("libre") {
             res.srcDirs("src/libre/res")
+            assets.srcDirs("src/free/assets")
         }
         getByName("free") {
             res.srcDirs("src/free/res")

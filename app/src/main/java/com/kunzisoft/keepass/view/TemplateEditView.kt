@@ -330,14 +330,30 @@ class TemplateEditView @JvmOverloads constructor(
         templateFieldNotEmpty: Boolean,
         retrieveDefaultValues: Boolean
     ) {
+        val previousPasskey = mEntryInfo?.passkey
+        val previousAppOrigin = mEntryInfo?.appOrigin
         super.populateEntryInfoWithViews(templateFieldNotEmpty, retrieveDefaultValues)
         val getField: (id: String) -> CharArray? = { key ->
             getCustomFieldOrNull(key)?.protectedValue?.charArrayValue
         }
         mEntryInfo?.otpModel = OtpEntryFields.parseFields(getField)?.otpModel
         mEntryInfo?.creditCard = CreditCardEntryFields.parseFields(getField)
-        mEntryInfo?.passkey = PasskeyEntryFields.parseFields(getField)
-        mEntryInfo?.appOrigin = AppOriginEntryField.parseFields(getUrlFromView(), getField)
+        val parsedPasskey = PasskeyEntryFields.parseFields(getField)
+        mEntryInfo?.passkey = if (parsedPasskey != null && previousPasskey != null) {
+            parsedPasskey.copy(
+                backupEligibility = parsedPasskey.backupEligibility ?: previousPasskey.backupEligibility,
+                backupState = parsedPasskey.backupState ?: previousPasskey.backupState,
+                prfSecret = parsedPasskey.prfSecret ?: previousPasskey.prfSecret
+            )
+        } else {
+            parsedPasskey ?: previousPasskey
+        }
+        val parsedOrigin = AppOriginEntryField.parseFields(getUrlFromView(), getField)
+        mEntryInfo?.appOrigin = if (parsedOrigin.androidOrigins.isEmpty() && parsedOrigin.webOrigins.isEmpty() && previousAppOrigin != null) {
+            previousAppOrigin
+        } else {
+            parsedOrigin
+        }
     }
 
     override fun onRestoreEntryInstanceState(state: SavedState) {

@@ -189,7 +189,6 @@ class EntryEditViewModel: NodeEditViewModel() {
                 info.template = TemplateBuilder().passkey
                 info.icon = IconImage(IconImageStandard(IconImageStandard.KEY_ID))
                 info.password = charArrayOf()
-                info.url = ""
             }
             EntryType.EMAIL -> {
                 info.template = TemplateBuilder().email
@@ -251,18 +250,7 @@ class EntryEditViewModel: NodeEditViewModel() {
     }
 
     private suspend fun loadEntryInfo(database: ContextualDatabase, entryInfo: EntryInfo?) {
-        mInitialEntryInfo = entryInfo?.let { entryInfo ->
-            EntryInfo(entryInfo)
-        }
         isTemplate = database.entryIsTemplate(entryInfo)
-        if (!initialized) {
-            initialized = true
-            entryInfo?.let {
-                withContext(Dispatchers.Main) {
-                    _entryEditEvents.emit(EntryEditEvent.EntryLoaded(entryInfo))
-                }
-            }
-        }
         val selectedTemplate = inferTemplateForEntry(entryInfo)
         mPreviousTemplateTags = Tags(selectedTemplate.tags)
         val dbTemplates = database.getTemplates(isTemplate)
@@ -284,6 +272,17 @@ class EntryEditViewModel: NodeEditViewModel() {
 
         if (entryInfo != null) {
             entryInfo.template = effectiveTemplate
+        }
+        mInitialEntryInfo = entryInfo?.let { info ->
+            EntryInfo(info)
+        }
+        if (!initialized) {
+            initialized = true
+            entryInfo?.let {
+                withContext(Dispatchers.Main) {
+                    _entryEditEvents.emit(EntryEditEvent.EntryLoaded(entryInfo))
+                }
+            }
         }
 
         val templates = Templates(
@@ -351,6 +350,18 @@ class EntryEditViewModel: NodeEditViewModel() {
     fun saveEntryInfo(entryInfo: EntryInfo) {
         if (actionLocked.not()) {
             actionLocked = true
+            mRegisterInfo?.passkey?.let { regPasskey ->
+                if (entryInfo.passkey == null) {
+                    entryInfo.passkey = regPasskey
+                }
+            }
+            mRegisterInfo?.appOrigin?.let { regOrigin ->
+                if (entryInfo.appOrigin == null ||
+                    (entryInfo.appOrigin?.androidOrigins.isNullOrEmpty() && entryInfo.appOrigin?.webOrigins.isNullOrEmpty())
+                ) {
+                    entryInfo.appOrigin = regOrigin
+                }
+            }
             viewModelScope.launch {
                 mEntryId?.let {
                     _entryEditEvents.emit(

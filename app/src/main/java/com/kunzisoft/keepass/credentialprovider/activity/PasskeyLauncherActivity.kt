@@ -32,8 +32,10 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import com.kunzisoft.keepass.R
+import com.kunzisoft.keepass.activities.EntryEditActivity
 import com.kunzisoft.keepass.activities.FileDatabaseSelectActivity
 import com.kunzisoft.keepass.activities.GroupActivity
+import com.kunzisoft.keepass.model.EntryType
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addNodeId
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addSearchInfo
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addSpecialMode
@@ -132,13 +134,27 @@ class PasskeyLauncherActivity : AuthenticationLauncherActivity() {
                         )
                     }
                     is CredentialLauncherViewModel.CredentialState.LaunchGroupActivityForRegistration -> {
-                        GroupActivity.launchForRegistration(
-                            context = this@PasskeyLauncherActivity,
-                            database = uiState.database,
-                            typeMode = uiState.typeMode,
-                            registerInfo = uiState.registerInfo,
-                            activityResultLauncher = mPasskeyRegistrationActivityResultLauncher
-                        )
+                        val rootGroupId = uiState.database.rootGroup?.nodeId
+                        if (uiState.database.loaded && !uiState.database.isReadOnly && rootGroupId != null) {
+                            EntryEditActivity.launchForRegistration(
+                                context = this@PasskeyLauncherActivity,
+                                database = uiState.database,
+                                nodeId = rootGroupId,
+                                registerInfo = uiState.registerInfo,
+                                typeMode = uiState.typeMode,
+                                registrationType = EntryEditActivity.RegistrationType.CREATE,
+                                entryType = EntryType.PASSKEY,
+                                activityResultLauncher = mPasskeyRegistrationActivityResultLauncher
+                            )
+                        } else {
+                            GroupActivity.launchForRegistration(
+                                context = this@PasskeyLauncherActivity,
+                                database = uiState.database,
+                                typeMode = uiState.typeMode,
+                                registerInfo = uiState.registerInfo,
+                                activityResultLauncher = mPasskeyRegistrationActivityResultLauncher
+                            )
+                        }
                     }
                     is CredentialLauncherViewModel.CredentialState.LaunchFileDatabaseSelectActivityForSelection -> {
                         FileDatabaseSelectActivity.launchForSelection(
