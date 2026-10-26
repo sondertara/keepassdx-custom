@@ -56,6 +56,7 @@ object TemplateField {
     const val LABEL_IBAN = "IBAN"
     const val LABEL_SECURE_NOTE = "Secure Note"
     const val LABEL_MEMBERSHIP = "Membership"
+    const val LABEL_TOTP = "2FA / TOTP"
 
     fun isStandardFieldName(name: String): Boolean {
         return arrayOf(

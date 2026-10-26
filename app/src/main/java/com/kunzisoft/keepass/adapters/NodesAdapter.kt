@@ -39,10 +39,13 @@ import com.kunzisoft.keepass.database.element.SortNodeEnum
 import com.kunzisoft.keepass.database.element.Tag
 import com.kunzisoft.keepass.database.element.node.NodeId
 import com.kunzisoft.keepass.database.element.node.NodeType
+import com.kunzisoft.keepass.database.element.template.TemplateField
+import com.kunzisoft.keepass.database.helper.getLocalizedName
 import com.kunzisoft.keepass.icons.IconDrawableFactory
 import com.kunzisoft.keepass.model.EntryInfo
 import com.kunzisoft.keepass.model.GroupInfo
 import com.kunzisoft.keepass.model.Passkey
+import com.kunzisoft.keepass.model.PasskeyEntryFields
 import com.kunzisoft.keepass.model.SortedEntryInfo
 import com.kunzisoft.keepass.model.SortedGroupInfo
 import com.kunzisoft.keepass.model.SortedNodeInfo
@@ -315,7 +318,7 @@ class NodesAdapter(
         // Tags
         holder.tags.apply {
             val tags = node.tags
-            if (mShowTags) {
+            if (mShowTags && tags.isNotEmpty()) {
                 val tagsAdapter = TagsAdapter(this.context, TagsAdapter.TagViewType.SMALL)
                 layoutManager = LinearLayoutManager(
                     context,
@@ -335,8 +338,10 @@ class NodesAdapter(
                         return true
                     }
                 }
+                visibility = View.VISIBLE
+            } else {
+                visibility = View.GONE
             }
-            visibility = if (tags.isNotEmpty()) View.VISIBLE else View.GONE
         }
         // Add meta text to show UUID
         holder.meta.apply {
@@ -349,56 +354,126 @@ class NodesAdapter(
                 visibility = View.GONE
             }
         }
-        // Add path
-        node.path?.let { path ->
-            holder.path?.apply {
-                text = path
-                visibility = View.VISIBLE
-            }
-        } ?: run {
-            holder.path?.visibility = View.GONE
-        }
+        // Keep path view hidden so every card maintains a uniform 72dp 2-line height
+        holder.path?.visibility = View.GONE
 
         // Assign icon colors
         var iconColor = if (holder.container.isSelected)
             mColorOnSecondary
         else when (node) {
-            is GroupInfo -> mTextColor
+            is GroupInfo -> Color.parseColor("#4D6BFE")
             is EntryInfo -> mColorSecondary
             else -> mColorSecondary
+        }
+
+        // Unified 3-dots Menu Button (⋮) for both entries and groups
+        holder.menuBtn?.apply {
+            visibility = View.VISIBLE
+            setOnClickListener { v ->
+                mNodeClickCallback?.onNodeMenuClick(node, v)
+            }
         }
 
         // Specific elements for entry
         if (node is EntryInfo) {
             holder.text.text = node.getVisualTitle()
-            // Add subText with username
+            // Standardized 2-line subText: always visible with smart fallback
             holder.subText?.apply {
-                val username = node.username
-                if (mShowUserNames && username.isNotEmpty()) {
-                    visibility = View.VISIBLE
-                    text = username
-                    setTextSize(mTextSizeUnit, mSubTextDefaultDimension, mPrefSizeMultiplier)
-                    strikeOut(node.isCurrentlyExpires)
-                } else {
-                    visibility = View.GONE
-                }
+                val subtitle = resolveEntrySubtitle(node)
+                visibility = View.VISIBLE
+                text = subtitle
+                setTextSize(mTextSizeUnit, mSubTextDefaultDimension, mPrefSizeMultiplier)
+                strikeOut(node.isCurrentlyExpires)
             }
 
-            // OTP
+            // OTP inline display
             holder.otpDisplay?.setOtpModel(node.otpModel)
 
-            // Badges
+            // Category Pill Badge on the right
+            val templateTitle = node.template?.title
             val hasOtp = node.otpModel != null || node.tags.contains("TOTP") || node.tags.contains("2FA")
-            holder.badgeTotp?.visibility = if (hasOtp) View.VISIBLE else View.GONE
+            val hasPasskey = node.passkey != null || node.tags.contains("Passkey")
+            val hasCreditCard = node.creditCard?.number?.isNotEmpty() == true || node.tags.contains("银行卡") || node.tags.contains("CreditCard")
+            val isSecureNote = !hasOtp && !hasPasskey && !hasCreditCard
+                    && (node.tags.contains("安全便签") || node.tags.contains("SecureNote") || (node.username.isEmpty() && node.password.isEmpty() && node.notes.isNotEmpty()))
 
-            val hasPasskey = node.passkey != null
-            holder.badgePasskey?.visibility = if (hasPasskey) View.VISIBLE else View.GONE
+            holder.badgePasskey?.visibility = View.GONE
+            holder.badgeTotp?.let { badgeView ->
+                when {
+                    hasOtp || templateTitle.equals(TemplateField.LABEL_TOTP, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        "2FA",
+                        Color.parseColor("#10B981"),
+                        Color.parseColor("#1F10B981")
+                    )
+                    hasPasskey || templateTitle.equals(PasskeyEntryFields.PASSKEY_FIELD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.entry_badge_passkey),
+                        Color.parseColor("#6366F1"),
+                        Color.parseColor("#1F6366F1")
+                    )
+                    hasCreditCard || templateTitle.equals(TemplateField.LABEL_DEBIT_CREDIT_CARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.entry_badge_card),
+                        Color.parseColor("#F59E0B"),
+                        Color.parseColor("#1FF59E0B")
+                    )
+                    templateTitle.equals(TemplateField.LABEL_WIRELESS, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        "Wi-Fi",
+                        Color.parseColor("#06B6D4"),
+                        Color.parseColor("#1F06B6D4")
+                    )
+                    templateTitle.equals(TemplateField.LABEL_EMAIL, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.email),
+                        Color.parseColor("#3B82F6"),
+                        Color.parseColor("#1F3B82F6")
+                    )
+                    templateTitle.equals(TemplateField.LABEL_ID_CARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.id_card),
+                        Color.parseColor("#8B5CF6"),
+                        Color.parseColor("#1F8B5CF6")
+                    )
+                    templateTitle.equals(TemplateField.LABEL_BANK, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.bank),
+                        Color.parseColor("#0284C7"),
+                        Color.parseColor("#1F0284C7")
+                    )
+                    templateTitle.equals(TemplateField.LABEL_CRYPTOCURRENCY, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.cryptocurrency),
+                        Color.parseColor("#EC4899"),
+                        Color.parseColor("#1FEC4899")
+                    )
+                    isSecureNote || templateTitle.equals(TemplateField.LABEL_SECURE_NOTE, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.entry_badge_note),
+                        Color.parseColor("#14B8A6"),
+                        Color.parseColor("#1F14B8A6")
+                    )
+                    !templateTitle.isNullOrBlank() && !templateTitle.equals(TemplateField.LABEL_STANDARD, ignoreCase = true) -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        TemplateField.getLocalizedName(context, templateTitle),
+                        Color.parseColor("#8B5CF6"),
+                        Color.parseColor("#1F8B5CF6")
+                    )
+                    else -> AvatarHelper.bindCategoryBadge(
+                        badgeView,
+                        context.getString(R.string.entry_badge_password),
+                        Color.parseColor("#4D6BFE"),
+                        Color.parseColor("#1F4D6BFE")
+                    )
+                }
+            }
 
             // Attachment
             holder.attachmentIcon?.visibility =
                 if (node.containsAttachment()) View.VISIBLE else View.GONE
 
-            // Passkey
+            // Passkey action icon
             val passkey = node.passkey
             if (passkey != null) {
                 holder.passkeyIcon?.visibility = View.VISIBLE
@@ -408,14 +483,6 @@ class NodesAdapter(
             } else {
                 holder.passkeyIcon?.visibility = View.GONE
                 holder.passkeyIcon?.setOnClickListener(null)
-            }
-
-            // Unified 3-dots Menu Button (⋮)
-            holder.menuBtn?.apply {
-                visibility = View.VISIBLE
-                setOnClickListener { v ->
-                    mNodeClickCallback?.onNodeMenuClick(node, v)
-                }
             }
 
             // Assign colors
@@ -436,7 +503,7 @@ class NodesAdapter(
                 } else {
                     holder.text.setTextColor(mTextColor)
                     holder.subText?.setTextColor(mTextColorSecondary)
-                    holder.otpDisplay?.setTokenTextColor(mTextColorSecondary)
+                    holder.otpDisplay?.setTokenTextColor(mTextColor)
                     holder.otpDisplay?.setProgressIndicatorColor(mColorSecondary)
                     holder.attachmentIcon?.setColorFilter(mTextColorSecondary)
                     holder.passkeyIcon?.setColorFilter(mTextColorSecondary)
@@ -455,17 +522,29 @@ class NodesAdapter(
             }
         }
 
-        // Add number of entries in groups
+        // Specific elements for groups (folders)
         if (node is SortedGroupInfo) {
-            if (mShowNumberEntries) {
-                holder.numberChildren?.apply {
-                    text = node.numberOfChildEntries.toString()
-                    setTextSize(mTextSizeUnit, mNumberChildrenTextDefaultDimension, mPrefSizeMultiplier)
-                    visibility = View.VISIBLE
-                }
-            } else {
-                holder.numberChildren?.visibility = View.GONE
+            holder.numberChildren?.visibility = View.GONE
+            holder.subText?.apply {
+                visibility = View.VISIBLE
+                text = context.getString(R.string.group_entries_count_subtitle, node.numberOfChildEntries)
+                setTextSize(mTextSizeUnit, mSubTextDefaultDimension, mPrefSizeMultiplier)
+                setTextColor(if (isSelected) mColorOnSecondary else mTextColorSecondary)
             }
+            holder.text.setTextColor(if (isSelected) mColorOnSecondary else mTextColor)
+            holder.badgeTotp?.let { badgeView ->
+                AvatarHelper.bindCategoryBadge(
+                    badgeView,
+                    context.getString(R.string.entry_badge_group),
+                    Color.parseColor("#64748B"),
+                    Color.parseColor("#1F64748B")
+                )
+            }
+            ViewCompat.setBackgroundTintList(
+                holder.container,
+                ColorStateList.valueOf(if (isSelected) mColorSecondary else mColorSurfaceContainer)
+            )
+            holder.iconFrame?.background = AvatarHelper.getGroupSquircleBackground(context)
         }
 
         // Assign image
@@ -487,9 +566,10 @@ class NodesAdapter(
                 }
             } else {
                 iconDrawableFactory.assignDatabaseIcon(this, node.icon, iconColor)
+                val groupIconDp = 24f * context.resources.displayMetrics.density
                 layoutParams?.apply {
-                    height = (mIconDefaultDimension * mPrefSizeMultiplier).toInt()
-                    width = (mIconDefaultDimension * mPrefSizeMultiplier).toInt()
+                    height = (groupIconDp * mPrefSizeMultiplier).toInt()
+                    width = (groupIconDp * mPrefSizeMultiplier).toInt()
                 }
             }
         }
@@ -501,6 +581,37 @@ class NodesAdapter(
         holder.container.setOnLongClickListener {
             mNodeClickCallback?.onNodeLongClick(node) ?: false
         }
+    }
+
+    private fun resolveEntrySubtitle(node: EntryInfo): String {
+        if (mShowUserNames && node.username.isNotBlank()) {
+            return node.username
+        }
+        val cardNumber = node.creditCard?.number?.filter { !it.isWhitespace() }
+        if (!cardNumber.isNullOrEmpty()) {
+            val tail = if (cardNumber.length > 4) cardNumber.takeLast(4) else cardNumber
+            return "•••• $tail"
+        }
+        val rp = node.passkey?.relyingParty
+        if (!rp.isNullOrBlank()) {
+            return rp
+        }
+        if (node.url.isNotBlank()) {
+            return node.url
+                .removePrefix("https://")
+                .removePrefix("http://")
+                .removePrefix("www.")
+                .substringBefore("/")
+        }
+        if (node.notes.isNotBlank()) {
+            val firstLine = node.notes.lineSequence().firstOrNull { it.isNotBlank() }?.trim()
+            if (!firstLine.isNullOrEmpty()) return firstLine
+        }
+        val path = (node as? SortedEntryInfo)?.path
+        if (!path.isNullOrBlank() && path != "/") {
+            return path
+        }
+        return context.getString(R.string.entry_no_username_placeholder)
     }
 
     private fun assignBackgroundColor(view: View?, entry: EntryInfo) {
@@ -543,6 +654,7 @@ class NodesAdapter(
     class NodeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var container: View = itemView.findViewById(R.id.node_container)
         var imageIdentifier: ImageView? = itemView.findViewById(R.id.node_image_identifier)
+        var iconFrame: View? = itemView.findViewById(R.id.node_icon_frame)
         var icon: ImageView = itemView.findViewById(R.id.node_icon)
         var text: TextView = itemView.findViewById(R.id.node_text)
         var subText: TextView? = itemView.findViewById(R.id.node_subtext)

@@ -427,6 +427,9 @@ class GroupActivity : DatabaseLockActivity() {
                         val currentGroupId = mGroupViewModel.mainGroup?.nodeId ?: mDatabase?.rootGroup?.nodeId
                         ImportWizardActivity.launch(this@GroupActivity, currentGroupId)
                     }
+                    R.id.menu_deduplication -> {
+                        DeduplicationActivity.launch(this@GroupActivity)
+                    }
                     R.id.menu_merge_from -> {
                         if (mDatabaseAllowUserVerification) {
                             checkUserVerification(
@@ -554,11 +557,12 @@ class GroupActivity : DatabaseLockActivity() {
                 launch {
                     combine(
                         mGroupViewModel.isFlatView,
-                        mGroupViewModel.vaultCategory
-                    ) { isFlat, category ->
-                        isFlat || category != VaultCategory.ALL
-                    }.collect { isNonHierarchical ->
-                        breadcrumbListView?.visibility = if (isNonHierarchical) View.GONE else View.VISIBLE
+                        mGroupViewModel.vaultCategory,
+                        mGroupViewModel.groupUIState.map { it.breadcrumbs?.size ?: 0 }.distinctUntilChanged()
+                    ) { isFlat, category, breadcrumbCount ->
+                        isFlat || category != VaultCategory.ALL || breadcrumbCount <= 1
+                    }.collect { shouldHideBreadcrumb ->
+                        breadcrumbListView?.visibility = if (shouldHideBreadcrumb) View.GONE else View.VISIBLE
                     }
                 }
                 launch {
@@ -1300,6 +1304,7 @@ class GroupActivity : DatabaseLockActivity() {
             val modeCondition = mSpecialMode == SpecialMode.DEFAULT
             menu.findItem(R.id.menu_app_settings)?.isVisible = modeCondition
             menu.findItem(R.id.menu_import_vault)?.isVisible = (mDatabase?.isReadOnly == false) && modeCondition
+            menu.findItem(R.id.menu_deduplication)?.isVisible = (mDatabase?.isReadOnly == false) && modeCondition
             menu.findItem(R.id.menu_merge_from)?.isVisible = mGroupViewModel.mergeFromDatabaseActionAllowed() && modeCondition
             menu.findItem(R.id.menu_save_copy_to)?.isVisible = mGroupViewModel.copyToDatabaseActionAllowed() && modeCondition
             menu.findItem(R.id.menu_about)?.isVisible = modeCondition

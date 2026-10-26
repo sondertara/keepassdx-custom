@@ -295,6 +295,22 @@ class TemplateBuilder {
                 sections)
         }
 
+    val totp: Template
+        get() {
+            val sections = mutableListOf<TemplateSection>()
+            val mainSection = TemplateSection(mutableListOf<TemplateAttribute>().apply {
+                add(usernameAttribute)
+                add(urlAttribute)
+                add(notesAttribute)
+            })
+            sections.add(mainSection)
+            return Template(
+                UUID_TOTP,
+                TemplateField.LABEL_TOTP,
+                IconImage(IconImageStandard(IconImageStandard.KEY_ID)),
+                sections)
+        }
+
     companion object {
         val UUID_EMAIL = UUID(0L, 101L)
         val UUID_WIFI = UUID(0L, 102L)
@@ -304,5 +320,6 @@ class TemplateBuilder {
         val UUID_BANK = UUID(0L, 106L)
         val UUID_CRYPTO = UUID(0L, 107L)
         val UUID_PASSKEY = UUID(0L, 108L)
+        val UUID_TOTP = UUID(0L, 109L)
     }
 }

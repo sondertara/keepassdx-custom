@@ -132,6 +132,8 @@ class EntryEditActivity : DatabaseLockActivity() {
     private val mEntryEditViewModel: EntryEditViewModel by viewModels()
     private val mAttachmentsViewModel: AttachmentsViewModel by viewModels()
     private var mTemplatesSelectorAdapter: TemplatesSelectorAdapter? = null
+    private var mTemplateSpinnerInitialized = false
+    private var mLastSelectedTemplatePosition = -1
 
     private val mColorPickerViewModel: ColorPickerViewModel by viewModels()
     private val mUserVerificationViewModel: UserVerificationViewModel by viewModels()
@@ -244,6 +246,10 @@ class EntryEditActivity : DatabaseLockActivity() {
                         uiState.templates?.let { templatesData ->
                             val templates = templatesData.templates
                             val defaultTemplate = templatesData.defaultTemplate
+                            val targetIndex = templates.indexOfFirst {
+                                it.uuid == defaultTemplate.uuid || it.title.equals(defaultTemplate.title, ignoreCase = true)
+                            }.coerceAtLeast(0)
+
                             templateSelectorSpinner?.apply {
                                 // Build template selector
                                 if (adapter == null) {
@@ -254,7 +260,9 @@ class EntryEditActivity : DatabaseLockActivity() {
                                         ).apply {
                                             iconDrawableFactory = mDatabase?.iconDrawableFactory
                                         }
+                                        mLastSelectedTemplatePosition = targetIndex
                                         adapter = mTemplatesSelectorAdapter
+                                        setSelection(targetIndex, false)
                                         onItemSelectedListener =
                                             object : AdapterView.OnItemSelectedListener {
                                                 override fun onItemSelected(
@@ -263,15 +271,28 @@ class EntryEditActivity : DatabaseLockActivity() {
                                                     position: Int,
                                                     id: Long
                                                 ) {
-                                                    mEntryEditViewModel.changeTemplate(templates[position])
+                                                    if (!mTemplateSpinnerInitialized) {
+                                                        mTemplateSpinnerInitialized = true
+                                                        if (position == targetIndex) {
+                                                            return
+                                                        }
+                                                    }
+                                                    if (position != mLastSelectedTemplatePosition) {
+                                                        mLastSelectedTemplatePosition = position
+                                                        mEntryEditViewModel.changeTemplate(templates[position])
+                                                    }
                                                 }
                                                 override fun onNothingSelected(parent: AdapterView<*>?) {}
                                             }
                                     } else {
                                         visibility = View.GONE
                                     }
+                                } else {
+                                    if (targetIndex != mLastSelectedTemplatePosition) {
+                                        mLastSelectedTemplatePosition = targetIndex
+                                        setSelection(targetIndex, false)
+                                    }
                                 }
-                                setSelection(templates.indexOf(defaultTemplate))
                             }
                         }
                         invalidateOptionsMenu()

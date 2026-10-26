@@ -186,6 +186,11 @@
             android:screenOrientation="portrait"
             android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity
+            android:name="com.kunzisoft.keepass.activities.DeduplicationActivity"
+            android:exported="false"
+            android:label="@string/dedup_manager_title"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
+        <activity
             android:name="com.kunzisoft.keepass.importer.ui.ImportWizardActivity"
             android:exported="true"
             android:label="@string/import_wizard_title"

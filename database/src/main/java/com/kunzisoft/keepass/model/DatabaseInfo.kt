@@ -347,7 +347,7 @@ open class DatabaseInfo: Database() {
     ): List<SortedNodeInfo> {
         return getGroupById(parentId)
             ?.getChildren(nodeFilter.filter)
-            ?.mapNotNull {
+            ?.mapIndexedNotNull { index, it ->
                 when (it) {
                     is Group -> SortedGroupInfo(
                         groupToCopy = getGroupInfoFrom(it),
@@ -356,13 +356,13 @@ open class DatabaseInfo: Database() {
                             filter = nodeFilter.filter
                         ),
                         // No path here | path = it.getPathString(),
-                        indexInParent = it.indexInParent(),
+                        indexInParent = index,
                         isReferenced = isGroupReferenced(it)
                     )
                     is Entry -> SortedEntryInfo(
                         entryToCopy = getEntryInfoFrom(it),
                         // No path here | path = it.getPathString(),
-                        indexInParent = it.indexInParent(),
+                        indexInParent = index,
                         isReferenced = isEntryReferenced(it)
                     )
                     else -> null

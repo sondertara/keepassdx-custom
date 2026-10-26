@@ -468,6 +468,40 @@ abstract class TemplateAbstractView<
         }
     }
 
+    fun getTitleFromView(): String {
+        return try {
+            val titleView: TEntryFieldView? = findViewWithTag(FIELD_TITLE_TAG)
+            titleView?.value?.let { String(it) } ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    fun setTitleInView(title: String) {
+        try {
+            val titleView: TEntryFieldView? = findViewWithTag(FIELD_TITLE_TAG)
+            titleView?.value = title.toCharArray()
+            mEntryInfo?.title = title
+        } catch (_: Exception) {}
+    }
+
+    fun getUsernameFromView(): String {
+        return try {
+            val usernameView: TEntryFieldView? = findViewWithTag(FIELD_USERNAME_TAG)
+            usernameView?.value?.let { String(it) } ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    fun setUsernameInView(username: String) {
+        try {
+            val usernameView: TEntryFieldView? = findViewWithTag(FIELD_USERNAME_TAG)
+            usernameView?.value = username.toCharArray()
+            mEntryInfo?.username = username
+        } catch (_: Exception) {}
+    }
+
     protected open fun populateEntryInfoWithViews(
         templateFieldNotEmpty: Boolean,
         retrieveDefaultValues: Boolean

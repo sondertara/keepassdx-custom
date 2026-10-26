@@ -97,7 +97,7 @@ enum class SortNodeEnum {
         private fun specificOrderOrHashIfEquals(object1: T, object2: T): Int {
             val specificOrderComp = compareBySpecificOrder(object1, object2)
             return when {
-                specificOrderComp == 0 -> object1.hashCode().compareTo(object2.hashCode())
+                specificOrderComp == 0 -> object1.nodeId.hashCode().compareTo(object2.nodeId.hashCode())
                 sortNodeParameters.ascending -> specificOrderComp
                 else -> -specificOrderComp
             }

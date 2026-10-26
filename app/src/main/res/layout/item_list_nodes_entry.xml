@@ -24,12 +24,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingVertical="4dp"
-    android:paddingHorizontal="10dp">
+    android:paddingHorizontal="12dp">
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/node_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:minHeight="72dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
@@ -46,10 +47,12 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="72dp"
             android:orientation="horizontal"
-            android:gravity="top"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="12dp">
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="10dp"
+            android:paddingVertical="10dp">
 
             <!-- 2FAS Style 44dp Squircle Avatar on the left -->
             <androidx.appcompat.widget.AppCompatImageView
@@ -57,124 +60,37 @@
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:scaleType="fitXY"
-                android:layout_gravity="top"
+                android:layout_gravity="center_vertical"
                 tools:src="@drawable/ic_blank_32dp" />
 
-            <!-- Vertical content column -->
+            <!-- Middle column: Standardized 2-line Title + Subtitle -->
             <LinearLayout
                 android:id="@+id/node_content_column"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="14dp"
+                android:gravity="center_vertical"
                 android:orientation="vertical">
 
-                <!-- Header Row: Title & Badges on the left, Icons & Menu on the right -->
-                <LinearLayout
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/node_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="account.jetbrains.com" />
 
-                    <LinearLayout
-                        android:id="@+id/node_title_row"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <androidx.appcompat.widget.AppCompatTextView
-                            android:id="@+id/node_text"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorOnSurface"
-                            tools:text="account.jetbrains.com" />
-
-                        <!-- Badges -->
-                        <TextView
-                            android:id="@+id/node_badge_totp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:background="@drawable/badge_totp_pill"
-                            android:paddingHorizontal="6dp"
-                            android:paddingVertical="1dp"
-                            android:text="2FA"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:textColor="#10B981"
-                            android:visibility="gone"
-                            tools:visibility="visible" />
-
-                        <TextView
-                            android:id="@+id/node_badge_passkey"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:background="@drawable/badge_passkey_pill"
-                            android:paddingHorizontal="6dp"
-                            android:paddingVertical="1dp"
-                            android:text="Passkey"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:textColor="#6366F1"
-                            android:visibility="gone"
-                            tools:visibility="visible" />
-                    </LinearLayout>
-
-                    <!-- Right Options: Passkey icon, Attachment icon, More (⋮) -->
-                    <LinearLayout
-                        android:id="@+id/node_right_options"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginStart="4dp">
-
-                        <androidx.appcompat.widget.AppCompatImageView
-                            android:id="@+id/node_attachment_icon"
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:layout_marginEnd="4dp"
-                            android:src="@drawable/ic_attach_file_white_24dp"
-                            app:tint="?attr/colorOnSurfaceVariant"
-                            android:visibility="gone" />
-
-                        <androidx.appcompat.widget.AppCompatImageView
-                            android:id="@+id/node_passkey_icon"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_marginEnd="4dp"
-                            android:padding="2dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="@string/passkey"
-                            android:src="@drawable/ic_passkey_white_24dp"
-                            app:tint="#6366F1"
-                            android:visibility="gone" />
-
-                        <androidx.appcompat.widget.AppCompatImageView
-                            android:id="@+id/node_btn_menu"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:padding="4dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/ic_more_vert_24dp"
-                            app:tint="?attr/colorOnSurfaceVariant"
-                            android:contentDescription="@string/options" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Subtitle / Username / Account -->
+                <!-- Subtitle / Username / Account / Fallback Summary -->
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/node_subtext"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
+                    android:layout_marginTop="2dp"
                     android:lines="1"
                     android:singleLine="true"
                     android:ellipsize="end"
@@ -182,25 +98,15 @@
                     android:textColor="?attr/colorOnSurfaceVariant"
                     tools:text="xhhuangchn@outlook.com" />
 
-                <!-- 2FAS Style Prominent OTP Display Area -->
-                <com.kunzisoft.keepass.view.OtpDisplayView
-                    android:id="@+id/node_otp_display"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
-
-                <!-- Tags -->
+                <!-- Tags (Optional via settings) -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/node_tags_list_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="4dp"
                     android:visibility="gone" />
 
-                <!-- Meta / UUID -->
+                <!-- Meta / UUID (Optional via settings) -->
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/node_meta"
                     android:layout_width="wrap_content"
@@ -209,7 +115,7 @@
                     android:textColor="?attr/colorOutline"
                     android:visibility="gone" />
 
-                <!-- Path -->
+                <!-- Path (Hidden to keep uniform card height) -->
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/node_path"
                     android:layout_width="match_parent"
@@ -218,6 +124,91 @@
                     android:textColor="?attr/colorOutline"
                     android:visibility="gone" />
 
+            </LinearLayout>
+
+            <!-- Right Fixed Column: Inline OTP + Category Pill Badge + Action Menu (⋮) -->
+            <LinearLayout
+                android:id="@+id/node_right_options"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginStart="8dp">
+
+                <!-- Inline Compact OTP Token + Countdown -->
+                <com.kunzisoft.keepass.view.OtpDisplayView
+                    android:id="@+id/node_otp_display"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="4dp"
+                    android:gravity="center_vertical"
+                    android:background="?attr/selectableItemBackground"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/node_attachment_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_attach_file_white_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    android:visibility="gone" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/node_passkey_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
+                    android:padding="2dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/passkey"
+                    android:src="@drawable/ic_passkey_white_24dp"
+                    app:tint="#6366F1"
+                    android:visibility="gone" />
+
+                <!-- Unified Right-Aligned Category Badge -->
+                <TextView
+                    android:id="@+id/node_badge_totp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/badge_totp_pill"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="密码"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#4D6BFE"
+                    android:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/node_badge_passkey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/badge_passkey_pill"
+                    android:paddingHorizontal="7dp"
+                    android:paddingVertical="2dp"
+                    android:text="Passkey"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="#6366F1"
+                    android:visibility="gone" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/node_btn_menu"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_more_vert_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    android:contentDescription="@string/options" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

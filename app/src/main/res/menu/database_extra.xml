@@ -26,6 +26,12 @@
             android:orderInCategory="79"
             app:iconTint="?attr/colorControlNormal"
             app:showAsAction="ifRoom" />
+        <item android:id="@+id/menu_deduplication"
+            android:icon="@drawable/ic_list_white_24dp"
+            android:title="@string/menu_deduplication"
+            android:orderInCategory="79"
+            app:iconTint="?attr/colorControlNormal"
+            app:showAsAction="ifRoom" />
         <item android:id="@+id/menu_merge_from"
             android:icon="@drawable/ic_merge_from_white_24dp"
             android:title="@string/menu_merge_from"

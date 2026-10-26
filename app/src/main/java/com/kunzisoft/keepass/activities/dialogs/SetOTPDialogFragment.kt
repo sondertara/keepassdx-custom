@@ -119,9 +119,14 @@ class SetOTPDialogFragment : DatabaseDialogFragment() {
         }
     }
 
+    private var mSuggestedTitle: String? = null
+    private var mSuggestedAccount: String? = null
+
     private fun applyParsedOtp(parsedOtp: OtpEntryQuickCreator.ParsedOtp) {
         mOtpElement.clear()
         mOtpElement = parsedOtp.otpElement
+        mSuggestedTitle = parsedOtp.displayTitle
+        mSuggestedAccount = parsedOtp.displayAccount
         upgradeType()
         upgradeTokenType()
         upgradeParameters()
@@ -335,7 +340,7 @@ class SetOTPDialogFragment : DatabaseDialogFragment() {
                     && mCounterWellFormed
                     && mPeriodWellFormed
                     && mDigitsWellFormed) {
-                entryEditViewModel.createOtp(mOtpElement)
+                entryEditViewModel.createOtp(mOtpElement, mSuggestedTitle, mSuggestedAccount)
                 dismiss()
             }
         }
@@ -386,20 +391,26 @@ class SetOTPDialogFragment : DatabaseDialogFragment() {
         // Set secret in OtpElement
         otpSecretTextView?.addTextChangedListener(object: TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                s?.toString()?.let { userString ->
-                    if (userString.length >= MIN_OTP_SECRET) {
-                        try {
-                            mOtpElement.setBase32Secret(userString.uppercase(Locale.ENGLISH).toCharArray())
-                            otpSecretContainer?.error = null
-                        } catch (_: Exception) {
-                            otpSecretContainer?.error = getString(R.string.error_otp_secret_key)
-                        }
-                    } else {
-                        otpSecretContainer?.error = getString(R.string.error_otp_secret_length,
-                            MIN_OTP_SECRET)
+                val input = s?.toString()?.trim() ?: ""
+                if (input.startsWith("otpauth://", ignoreCase = true)) {
+                    val parsed = OtpEntryQuickCreator.parse(input)
+                    if (parsed != null) {
+                        applyParsedOtp(parsed)
+                        return
                     }
-                    mSecretWellFormed = otpSecretContainer?.error == null
                 }
+                if (input.length >= MIN_OTP_SECRET) {
+                    try {
+                        mOtpElement.setBase32Secret(input.uppercase(Locale.ENGLISH).toCharArray())
+                        otpSecretContainer?.error = null
+                    } catch (_: Exception) {
+                        otpSecretContainer?.error = getString(R.string.error_otp_secret_key)
+                    }
+                } else {
+                    otpSecretContainer?.error = getString(R.string.error_otp_secret_length,
+                        MIN_OTP_SECRET)
+                }
+                mSecretWellFormed = otpSecretContainer?.error == null
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}

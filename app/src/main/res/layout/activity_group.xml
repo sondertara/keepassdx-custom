@@ -106,6 +106,7 @@
                     android:layout_height="64dp"
                     android:paddingHorizontal="12dp"
                     android:background="?attr/colorSurface"
+                    android:visibility="gone"
                     app:layout_scrollFlags="scroll|snap|enterAlways"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     android:orientation="horizontal" />

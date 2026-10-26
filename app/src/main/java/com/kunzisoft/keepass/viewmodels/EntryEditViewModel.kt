@@ -29,6 +29,8 @@ import com.kunzisoft.keepass.database.element.icon.IconImage
 import com.kunzisoft.keepass.database.element.icon.IconImageStandard
 import com.kunzisoft.keepass.database.element.template.Template
 import com.kunzisoft.keepass.database.element.template.TemplateBuilder
+import com.kunzisoft.keepass.database.element.template.TemplateEngine
+import com.kunzisoft.keepass.database.element.template.TemplateField
 import com.kunzisoft.keepass.model.EntryInfo
 import com.kunzisoft.keepass.model.EntryType
 import com.kunzisoft.keepass.model.FieldProtection
@@ -187,6 +189,7 @@ class EntryEditViewModel: NodeEditViewModel() {
                 info.tags.put("Secure Note")
             }
             EntryType.TOTP -> {
+                info.template = TemplateBuilder().totp
                 info.icon = IconImage(IconImageStandard(IconImageStandard.KEY_ID))
                 info.tags.put(OtpEntryFields.OTP_TAG)
             }
@@ -219,23 +222,31 @@ class EntryEditViewModel: NodeEditViewModel() {
         val allTemplates = mutableListOf<Template>()
         if (dbTemplates.isNotEmpty()) {
             allTemplates.addAll(dbTemplates)
+            TemplateEngine.getDefaults().forEach { defaultTpl ->
+                if (allTemplates.none { it.title.equals(defaultTpl.title, ignoreCase = true) }) {
+                    allTemplates.add(defaultTpl)
+                }
+            }
         } else {
             allTemplates.add(Template.STANDARD)
-            allTemplates.add(TemplateBuilder().creditCard)
-            allTemplates.add(TemplateBuilder().notes)
-            allTemplates.add(TemplateBuilder().passkey)
+            allTemplates.addAll(TemplateEngine.getDefaults())
         }
-        if (!allTemplates.any { it.uuid == selectedTemplate.uuid || it.title == selectedTemplate.title }) {
-            allTemplates.add(selectedTemplate)
+        val effectiveTemplate = allTemplates.firstOrNull {
+            it.uuid == selectedTemplate.uuid || it.title.equals(selectedTemplate.title, ignoreCase = true)
+        } ?: selectedTemplate.also { allTemplates.add(it) }
+
+        if (entryInfo != null) {
+            entryInfo.template = effectiveTemplate
         }
+
         val templates = Templates(
             templates = allTemplates,
-            defaultTemplate = selectedTemplate
+            defaultTemplate = effectiveTemplate
         )
         mTemplates = templates
         withContext(Dispatchers.Main) {
             _entryEditEvents.emit(EntryEditEvent.OnTemplateChanged(
-                template = selectedTemplate,
+                template = effectiveTemplate,
                 tagsToRemove = emptyList(),
                 tagsToAdd = emptyList()
             ))
@@ -254,11 +265,30 @@ class EntryEditViewModel: NodeEditViewModel() {
             val tagsToRemove = mPreviousTemplateTags.toStringList()
             val tagsToAdd = template.tags.toStringList()
             mPreviousTemplateTags = Tags(template.tags)
+
+            _entryEditUIState.update { current ->
+                val currentInfo = current.entryInfo
+                currentInfo?.template = template
+                val updatedTemplates = current.templates?.copy(defaultTemplate = template)
+                current.copy(
+                    entryInfo = currentInfo,
+                    templates = updatedTemplates
+                )
+            }
+
             _entryEditEvents.emit(EntryEditEvent.OnTemplateChanged(
                 template = template,
                 tagsToRemove = tagsToRemove,
                 tagsToAdd = tagsToAdd
             ))
+
+            // If switching to TOTP template and no OTP configured yet, prompt setup
+            if (template.title.equals(TemplateField.LABEL_TOTP, ignoreCase = true) ||
+                template.uuid == TemplateBuilder.UUID_TOTP) {
+                if (_entryEditUIState.value.entryInfo?.otpModel == null) {
+                    _entryEditEvents.emit(EntryEditEvent.RequestSetupOTP)
+                }
+            }
         }
     }
 
@@ -362,9 +392,13 @@ class EntryEditViewModel: NodeEditViewModel() {
         }
     }
 
-    fun createOtp(otpElement: OtpElement) {
+    fun createOtp(
+        otpElement: OtpElement,
+        suggestedTitle: String? = null,
+        suggestedUsername: String? = null
+    ) {
         viewModelScope.launch {
-            _entryEditEvents.emit(EntryEditEvent.OnOtpCreated(otpElement))
+            _entryEditEvents.emit(EntryEditEvent.OnOtpCreated(otpElement, suggestedTitle, suggestedUsername))
         }
     }
 
@@ -456,7 +490,9 @@ class EntryEditViewModel: NodeEditViewModel() {
         object RequestSetupOTP : EntryEditEvent()
 
         data class OnOtpCreated(
-            val otpElement: OtpElement
+            val otpElement: OtpElement,
+            val suggestedTitle: String? = null,
+            val suggestedUsername: String? = null
         ) : EntryEditEvent()
 
         data class CreateEntry(

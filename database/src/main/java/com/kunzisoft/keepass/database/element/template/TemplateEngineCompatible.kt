@@ -42,8 +42,11 @@ class TemplateEngineCompatible(database: DatabaseKDBX): TemplateEngine(database)
     }
 
     override fun removeMetaTemplateRecognitionFromEntry(entry: EntryKDBX): EntryKDBX {
+        if (!entry.containsField(TEMPLATE_ENTRY_UUID)) {
+            return entry
+        }
         val entryCopy = EntryKDBX().apply {
-            updateWith(entry)
+            updateWith(entry, copyHistory = false)
         }
         entryCopy.removeField(TEMPLATE_ENTRY_UUID)
         return entryCopy

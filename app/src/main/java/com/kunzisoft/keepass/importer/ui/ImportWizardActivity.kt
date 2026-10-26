@@ -46,6 +46,7 @@ import com.kunzisoft.keepass.activities.legacy.DatabaseLockActivity
 import com.kunzisoft.keepass.database.ContextualDatabase
 import com.kunzisoft.keepass.database.element.GroupId
 import com.kunzisoft.keepass.importer.DatabaseBatchImporter
+import com.kunzisoft.keepass.importer.DeduplicationEngine
 import com.kunzisoft.keepass.importer.ImporterFactory
 import com.kunzisoft.keepass.importer.model.ImportBatchResult
 import com.kunzisoft.keepass.importer.parsers.VaultImporter
@@ -76,9 +77,11 @@ class ImportWizardActivity : DatabaseLockActivity() {
     private lateinit var txtPreviewTotalEntries: TextView
     private lateinit var txtPreviewTotpEntries: TextView
     private lateinit var txtPreviewGroupsCount: TextView
+    private lateinit var txtPreviewDuplicates: TextView
     private lateinit var txtPreviewWarning: TextView
     private lateinit var radioGroupDestination: RadioGroup
     private lateinit var radioDestNewGroup: RadioButton
+    private lateinit var radioGroupDedup: RadioGroup
     private lateinit var progressImport: LinearProgressIndicator
     private lateinit var txtImportStatus: TextView
     private lateinit var btnStartImport: MaterialButton
@@ -144,9 +147,11 @@ class ImportWizardActivity : DatabaseLockActivity() {
         txtPreviewTotalEntries = findViewById(R.id.txt_preview_total_entries)
         txtPreviewTotpEntries = findViewById(R.id.txt_preview_totp_entries)
         txtPreviewGroupsCount = findViewById(R.id.txt_preview_groups_count)
+        txtPreviewDuplicates = findViewById(R.id.txt_preview_duplicates)
         txtPreviewWarning = findViewById(R.id.txt_preview_warning)
         radioGroupDestination = findViewById(R.id.radio_group_destination)
         radioDestNewGroup = findViewById(R.id.radio_dest_new_group)
+        radioGroupDedup = findViewById(R.id.radio_group_dedup)
         progressImport = findViewById(R.id.progress_import)
         txtImportStatus = findViewById(R.id.txt_import_status)
         btnStartImport = findViewById(R.id.btn_start_import)
@@ -209,10 +214,11 @@ class ImportWizardActivity : DatabaseLockActivity() {
                 }
 
                 val parseResult = importer.parse(ByteArrayInputStream(fileBytes))
+                val precheck = DeduplicationEngine.precheckImportBatch(mDatabase, parseResult)
 
                 withContext(Dispatchers.Main) {
                     showLoading(false)
-                    displayPreviewResult(parseResult)
+                    displayPreviewResult(parseResult, precheck)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error parsing file for import", e)
@@ -228,13 +234,23 @@ class ImportWizardActivity : DatabaseLockActivity() {
         }
     }
 
-    private fun displayPreviewResult(result: ImportBatchResult) {
+    private fun displayPreviewResult(
+        result: ImportBatchResult,
+        precheck: DeduplicationEngine.PrecheckResult
+    ) {
         parsedBatchResult = result
 
         txtPreviewFormatName.text = getString(R.string.import_detected_format, result.sourceName)
         txtPreviewTotalEntries.text = getString(R.string.import_total_entries, result.totalEntriesCount)
         txtPreviewTotpEntries.text = getString(R.string.import_totp_entries, result.totpEntriesCount)
         txtPreviewGroupsCount.text = getString(R.string.import_folders_count, result.groups.size)
+
+        if (precheck.duplicateCount > 0) {
+            txtPreviewDuplicates.text = getString(R.string.import_duplicates_detected, precheck.duplicateCount)
+            txtPreviewDuplicates.isVisible = true
+        } else {
+            txtPreviewDuplicates.isVisible = false
+        }
 
         if (result.warnings.isNotEmpty()) {
             txtPreviewWarning.text = result.warnings.joinToString("\n")
@@ -261,6 +277,11 @@ class ImportWizardActivity : DatabaseLockActivity() {
         btnSelectFile.isEnabled = false
 
         val createDedicated = radioDestNewGroup.isChecked
+        val conflictStrategy = when (radioGroupDedup.checkedRadioButtonId) {
+            R.id.radio_dedup_update -> DeduplicationEngine.ImportConflictStrategy.UPDATE_EXISTING
+            R.id.radio_dedup_keep_all -> DeduplicationEngine.ImportConflictStrategy.KEEP_ALL
+            else -> DeduplicationEngine.ImportConflictStrategy.SKIP_DUPLICATES
+        }
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -268,19 +289,28 @@ class ImportWizardActivity : DatabaseLockActivity() {
                     database = database,
                     targetParentGroupId = currentParentGroupId,
                     batchResult = result,
-                    createDedicatedGroup = createDedicated
+                    createDedicatedGroup = createDedicated,
+                    conflictStrategy = conflictStrategy
                 )
 
                 // Save changes to database
-                saveDatabase()
+                if (summary.totalEntries > 0 || summary.updatedEntries > 0 || summary.totalGroups > 0) {
+                    saveDatabase()
+                }
 
                 withContext(Dispatchers.Main) {
                     showLoading(false)
-                    Toast.makeText(
-                        this@ImportWizardActivity,
-                        getString(R.string.import_success, summary.totalEntries, summary.totalGroups),
-                        Toast.LENGTH_LONG
-                    ).show()
+                    val msg = if (summary.skippedDuplicates > 0 || summary.updatedEntries > 0) {
+                        getString(
+                            R.string.import_success_with_dedup,
+                            summary.totalEntries,
+                            summary.skippedDuplicates,
+                            summary.updatedEntries
+                        )
+                    } else {
+                        getString(R.string.import_success, summary.totalEntries, summary.totalGroups)
+                    }
+                    Toast.makeText(this@ImportWizardActivity, msg, Toast.LENGTH_LONG).show()
 
                     setResult(Activity.RESULT_OK)
                     finish()
@@ -323,6 +353,14 @@ class ImportWizardActivity : DatabaseLockActivity() {
 
     override fun onDatabaseRetrieved(database: ContextualDatabase) {
         super.onDatabaseRetrieved(database)
+        parsedBatchResult?.let { result ->
+            lifecycleScope.launch(Dispatchers.IO) {
+                val precheck = DeduplicationEngine.precheckImportBatch(database, result)
+                withContext(Dispatchers.Main) {
+                    displayPreviewResult(result, precheck)
+                }
+            }
+        }
     }
 
     companion object {

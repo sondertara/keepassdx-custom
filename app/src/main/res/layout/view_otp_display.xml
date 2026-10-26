@@ -8,31 +8,32 @@
     <TextView
         android:id="@+id/otp_token"
         style="@style/KeepassDXStyle.Info.Entry"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
         android:gravity="center_vertical"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="6dp"
         android:fontFamily="monospace"
-        android:letterSpacing="0.08"
-        android:textSize="22sp"
+        android:letterSpacing="0.05"
+        android:singleLine="true"
+        android:textSize="15sp"
         android:textStyle="bold"
         android:textColor="?attr/colorOnSurface"
         tools:text="513 651" />
 
     <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_gravity="center_vertical">
         <com.kunzisoft.keepass.view.OtpProgressView
             android:id="@+id/otp_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_gravity="center" />
         <ImageView
             android:id="@+id/otp_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:layout_gravity="center"
             android:contentDescription="@string/token"
             android:src="@drawable/ic_otp_white_24dp"/>

@@ -174,10 +174,15 @@ class GroupViewModel(application: Application): AndroidViewModel(application) {
                             nodeFilter = mNodeFilter
                         ) ?: listOf()
                         // Children
-                        val rawChildren: List<SortedNodeInfo> = if (_isFlatView.value || _vaultCategory.value != VaultCategory.ALL) {
+                        val children: List<SortedNodeInfo> = if (_isFlatView.value || _vaultCategory.value != VaultCategory.ALL) {
                             val targetGroup = database.getGroupById(group.nodeId) ?: database.rootGroup
                             if (targetGroup != null) {
-                                VaultNodeFilter.getFlattenedEntries(database, targetGroup, mNodeFilter)
+                                VaultNodeFilter.getFlattenedEntries(
+                                    database = database,
+                                    group = targetGroup,
+                                    nodeFilter = mNodeFilter,
+                                    category = _vaultCategory.value
+                                )
                             } else {
                                 listOf()
                             }
@@ -188,7 +193,6 @@ class GroupViewModel(application: Application): AndroidViewModel(application) {
                                 nodeFilter = mNodeFilter
                             ) ?: listOf()
                         }
-                        val children = VaultNodeFilter.filter(rawChildren, _vaultCategory.value)
                         // To enable add button
                         val addGroupEnabled = database.allowAddGroupIn(group = group)
                         val addEntryEnabled = database.allowAddEntryIn(group = group)

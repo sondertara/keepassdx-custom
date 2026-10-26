@@ -127,6 +127,7 @@ class GroupFragment : DatabaseFragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     mGroupViewModel.groupUIState.collect { groupUIState ->
+                        if (!groupUIState.loaded) return@collect
                         try {
                             groupUIState.group?.let { currentGroup ->
                                 val isSearchInfo = currentGroup is SearchGroupInfo

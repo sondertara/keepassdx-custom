@@ -156,6 +156,7 @@ fun TemplateField.getLocalizedName(context: Context?, name: String): String {
         LABEL_IBAN.equals(name, true) -> context.getString(R.string.international_bank_account_number)
         LABEL_SECURE_NOTE.equals(name, true) -> context.getString(R.string.secure_note)
         LABEL_MEMBERSHIP.equals(name, true) -> context.getString(R.string.membership)
+        LABEL_TOTP.equals(name, true) -> context.getString(R.string.template_totp)
 
         PASSKEY_FIELD.equals(name, true) -> context.getString(R.string.passkey)
         FIELD_USERNAME.equals(name, true) -> context.getString(R.string.passkey_username)

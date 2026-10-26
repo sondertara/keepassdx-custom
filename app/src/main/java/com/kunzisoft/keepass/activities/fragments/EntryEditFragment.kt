@@ -246,6 +246,12 @@ class EntryEditFragment: DatabaseFragment() {
                                 // Update the otp field with otpauth:// url
                                 templateView.putOtpElement(event.otpElement)
                                 tagsCompletionView.addObjectSync(OtpEntryFields.OTP_TAG)
+                                if (!event.suggestedTitle.isNullOrBlank() && templateView.getTitleFromView().isBlank()) {
+                                    templateView.setTitleInView(event.suggestedTitle)
+                                }
+                                if (!event.suggestedUsername.isNullOrBlank() && templateView.getUsernameFromView().isBlank()) {
+                                    templateView.setUsernameInView(event.suggestedUsername)
+                                }
                             }
                             is EntryEditViewModel.EntryEditEvent.OnFieldProtectionUpdated -> {
                                 updateFieldProtection(event.fieldProtection)

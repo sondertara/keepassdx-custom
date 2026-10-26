@@ -29,7 +29,9 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.util.LruCache
+import android.widget.TextView
 import java.util.Locale
 import kotlin.math.abs
 
@@ -99,6 +101,27 @@ object AvatarHelper {
         val drawable = BitmapDrawable(context.resources, bitmap)
         cache.put(cacheKey, drawable)
         return drawable
+    }
+
+    fun getGroupSquircleBackground(context: Context): Drawable {
+        val density = context.resources.displayMetrics.density
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 12f * density
+            setColor(Color.parseColor("#1F4D6BFE"))
+        }
+    }
+
+    fun bindCategoryBadge(badgeView: TextView, label: String, textColor: Int, bgColor: Int) {
+        val density = badgeView.context.resources.displayMetrics.density
+        badgeView.text = label
+        badgeView.setTextColor(textColor)
+        badgeView.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 999f * density
+            setColor(bgColor)
+        }
+        badgeView.visibility = android.view.View.VISIBLE
     }
 
     private fun extractBadgeText(title: String): String {

@@ -21,9 +21,11 @@ package com.kunzisoft.keepass.importer
 
 import android.util.Log
 import com.kunzisoft.keepass.database.ContextualDatabase
+import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.database.element.Group
 import com.kunzisoft.keepass.database.element.GroupId
 import com.kunzisoft.keepass.importer.model.ImportBatchResult
+import com.kunzisoft.keepass.importer.model.ImportedEntry
 import com.kunzisoft.keepass.importer.model.ImportedGroup
 import com.kunzisoft.keepass.model.GroupInfo
 import java.text.SimpleDateFormat
@@ -32,7 +34,7 @@ import java.util.Locale
 
 /**
  * High-performance, in-memory batch importer for third-party vault data.
- * Directly mounts imported groups and entries into [ContextualDatabase] without per-entry background task overhead.
+ * Directly mounts imported groups and entries into [ContextualDatabase] with built-in deduplication.
  */
 object DatabaseBatchImporter {
 
@@ -41,6 +43,8 @@ object DatabaseBatchImporter {
     data class BatchImportSummary(
         val totalEntries: Int,
         val totalGroups: Int,
+        val skippedDuplicates: Int = 0,
+        val updatedEntries: Int = 0,
         val rootGroupName: String
     )
 
@@ -53,6 +57,7 @@ object DatabaseBatchImporter {
         batchResult: ImportBatchResult,
         createDedicatedGroup: Boolean = true,
         customDedicatedGroupName: String? = null,
+        conflictStrategy: DeduplicationEngine.ImportConflictStrategy = DeduplicationEngine.ImportConflictStrategy.SKIP_DUPLICATES,
         onProgress: ((current: Int, total: Int) -> Unit)? = null
     ): BatchImportSummary {
         val rootParent = if (targetParentGroupId != null) {
@@ -63,10 +68,27 @@ object DatabaseBatchImporter {
 
         var importedEntriesCount = 0
         var importedGroupsCount = 0
+        var skippedDuplicatesCount = 0
+        var updatedEntriesCount = 0
+        var processedCount = 0
         val totalEntriesToImport = batchResult.totalEntriesCount
 
-        // 1. Determine base destination group
-        val destinationGroup: Group = if (createDedicatedGroup) {
+        // Pre-index existing entries if deduplication is active
+        val existingEntryMap = HashMap<String, Entry>()
+        if (conflictStrategy != DeduplicationEngine.ImportConflictStrategy.KEEP_ALL) {
+            for ((entry, _) in DeduplicationEngine.collectActiveEntries(database)) {
+                DeduplicationEngine.buildKeyForDatabaseEntry(entry)?.let { key ->
+                    existingEntryMap.putIfAbsent(key, entry)
+                }
+            }
+        }
+
+        // Lazy destination group creation so we don't create an empty folder if all entries are skipped
+        var lazyDedicatedGroup: Group? = null
+        fun getOrCreateDestinationGroup(): Group {
+            if (!createDedicatedGroup) return rootParent
+            lazyDedicatedGroup?.let { return it }
+
             val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val groupName = customDedicatedGroupName?.ifEmpty { null }
                 ?: "导入 - ${batchResult.sourceName} ($dateStr)"
@@ -80,73 +102,99 @@ object DatabaseBatchImporter {
             database.addGroupTo(dedicated, rootParent)
             dedicated.touch(modified = true, touchParents = true)
             importedGroupsCount++
-            dedicated
-        } else {
-            rootParent
+            lazyDedicatedGroup = dedicated
+            return dedicated
         }
 
-        // 2. Import root entries directly
-        batchResult.rootEntries.forEach { importedEntry ->
+        fun handleEntry(importedEntry: ImportedEntry, targetGroupProvider: () -> Group) {
+            processedCount++
+            val key = if (conflictStrategy != DeduplicationEngine.ImportConflictStrategy.KEEP_ALL) {
+                DeduplicationEngine.buildKeyForImportedEntry(importedEntry)
+            } else null
+
+            val existing = if (key != null) existingEntryMap[key] else null
+            if (existing != null) {
+                when (conflictStrategy) {
+                    DeduplicationEngine.ImportConflictStrategy.SKIP_DUPLICATES -> {
+                        skippedDuplicatesCount++
+                        onProgress?.invoke(processedCount, totalEntriesToImport)
+                        return
+                    }
+                    DeduplicationEngine.ImportConflictStrategy.UPDATE_EXISTING -> {
+                        DeduplicationEngine.mergeImportedIntoExistingEntry(database, existing, importedEntry)
+                        updatedEntriesCount++
+                        onProgress?.invoke(processedCount, totalEntriesToImport)
+                        return
+                    }
+                    DeduplicationEngine.ImportConflictStrategy.KEEP_ALL -> {}
+                }
+            }
+
             val entryInfo = importedEntry.toEntryInfo()
             val entry = database.createEntry(entryInfo)
             if (entry != null) {
-                database.addEntryTo(entry, destinationGroup)
+                val targetGroup = targetGroupProvider()
+                database.addEntryTo(entry, targetGroup)
                 entry.touch(modified = true, touchParents = true)
+                if (key != null) {
+                    existingEntryMap[key] = entry
+                }
                 importedEntriesCount++
-                onProgress?.invoke(importedEntriesCount, totalEntriesToImport)
+                onProgress?.invoke(processedCount, totalEntriesToImport)
             } else {
                 Log.w(TAG, "Failed to create entry for: ${importedEntry.title}")
             }
         }
 
-        // 3. Recursively import subgroups
-        fun importSubGroup(impGroup: ImportedGroup, parentGroup: Group) {
-            val groupInfo = GroupInfo().apply {
-                title = impGroup.name.ifEmpty { "Group" }
-            }
-            val newGroup = database.createGroup(groupInfo)
-            if (newGroup == null) {
-                Log.w(TAG, "Failed to create group for: ${impGroup.name}")
-                return
-            }
+        // 1. Import root entries
+        batchResult.rootEntries.forEach { importedEntry ->
+            handleEntry(importedEntry) { getOrCreateDestinationGroup() }
+        }
 
-            database.addGroupTo(newGroup, parentGroup)
-            newGroup.touch(modified = true, touchParents = true)
-            importedGroupsCount++
-
-            // Add entries in this subgroup
-            impGroup.entries.forEach { entryData ->
-                val entryInfo = entryData.toEntryInfo()
-                val entry = database.createEntry(entryInfo)
-                if (entry != null) {
-                    database.addEntryTo(entry, newGroup)
-                    entry.touch(modified = true, touchParents = true)
-                    importedEntriesCount++
-                    onProgress?.invoke(importedEntriesCount, totalEntriesToImport)
-                } else {
-                    Log.w(TAG, "Failed to create entry for: ${entryData.title}")
+        // 2. Recursively import subgroups
+        fun importSubGroup(impGroup: ImportedGroup, parentGroupProvider: () -> Group) {
+            var lazyCurrentGroup: Group? = null
+            fun getOrCreateCurrentGroup(): Group {
+                lazyCurrentGroup?.let { return it }
+                val parentGroup = parentGroupProvider()
+                val groupInfo = GroupInfo().apply {
+                    title = impGroup.name.ifEmpty { "Group" }
                 }
+                val newGroup = database.createGroup(groupInfo)
+                    ?: throw IllegalStateException("Failed to create group for: ${impGroup.name}")
+                database.addGroupTo(newGroup, parentGroup)
+                newGroup.touch(modified = true, touchParents = true)
+                importedGroupsCount++
+                lazyCurrentGroup = newGroup
+                return newGroup
             }
 
-            // Recurse into children
+            impGroup.entries.forEach { entryData ->
+                handleEntry(entryData) { getOrCreateCurrentGroup() }
+            }
+
             impGroup.childrenGroups.forEach { childGroup ->
-                importSubGroup(childGroup, newGroup)
+                importSubGroup(childGroup) { getOrCreateCurrentGroup() }
             }
         }
 
         batchResult.groups.forEach { group ->
-            importSubGroup(group, destinationGroup)
+            importSubGroup(group) { getOrCreateDestinationGroup() }
         }
 
-        // 4. Mark database modified and flag reload
-        destinationGroup.touch(modified = true, touchParents = true)
-        database.indicateNotSavedData()
-        database.wasReloaded = true
+        // 3. Mark database modified and flag reload if anything changed
+        if (importedEntriesCount > 0 || updatedEntriesCount > 0 || importedGroupsCount > 0) {
+            (lazyDedicatedGroup ?: rootParent).touch(modified = true, touchParents = true)
+            database.indicateNotSavedData()
+            database.wasReloaded = true
+        }
 
         return BatchImportSummary(
             totalEntries = importedEntriesCount,
             totalGroups = importedGroupsCount,
-            rootGroupName = destinationGroup.title
+            skippedDuplicates = skippedDuplicatesCount,
+            updatedEntries = updatedEntriesCount,
+            rootGroupName = (lazyDedicatedGroup ?: rootParent).title
         )
     }
 }

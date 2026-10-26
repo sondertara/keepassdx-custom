@@ -223,7 +223,8 @@ abstract class TemplateEngine(private val mDatabase: DatabaseKDBX) {
                 templateBuilder.creditCard,
                 templateBuilder.bank,
                 templateBuilder.cryptocurrency,
-                templateBuilder.passkey)
+                templateBuilder.passkey,
+                templateBuilder.totp)
         }
 
         fun containsTemplateDecorator(name: String): Boolean {

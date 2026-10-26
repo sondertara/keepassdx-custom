@@ -87,34 +87,73 @@ object VaultNodeFilter {
         }
     }
 
+    private fun isFavoriteRawEntry(entry: Entry): Boolean {
+        return entry.tags.toStringList().any { tag ->
+            val lower = tag.lowercase(Locale.ROOT)
+            lower == "favorite" || lower == "favourites" || lower == "常用" || lower == "收藏" || lower == "星标"
+        }
+    }
+
     /**
      * Recursively collect all entries from [group] into a flattened list of [SortedEntryInfo].
+     * Uses O(1) sequential indexing and cached group paths instead of O(N^2) indexInParent() lookups.
      */
     fun getFlattenedEntries(
         database: DatabaseInfo,
         group: Group,
-        nodeFilter: NodeFilter = EmptyNodeFilter()
+        nodeFilter: NodeFilter = EmptyNodeFilter(),
+        category: VaultCategory = VaultCategory.ALL
     ): List<SortedEntryInfo> {
-        val collectedEntries = mutableListOf<Entry>()
+        val result = ArrayList<SortedEntryInfo>(128)
+        val recycleBinId = if (database.isRecycleBinEnabled) database.recycleBin?.nodeId else null
+        val isTargetRecycleBin = recycleBinId != null && group.nodeId == recycleBinId
+        var flatIndex = 0
 
-        fun collect(currentGroup: Group) {
-            val childEntries = currentGroup.getChildEntries().filter(nodeFilter.filter)
-            collectedEntries.addAll(childEntries)
+        fun collect(currentGroup: Group, currentPath: String) {
+            val childEntries = currentGroup.getChildEntries()
+            for (i in childEntries.indices) {
+                val entry = childEntries[i]
+                if (!nodeFilter.filter(entry)) continue
+                if (category == VaultCategory.FAVORITES && !isFavoriteRawEntry(entry)) continue
 
-            currentGroup.getChildGroups().filter(nodeFilter.filter).forEach { subGroup ->
-                collect(subGroup)
+                val entryInfo = database.getEntryInfoFrom(entry)
+                val matches = when (category) {
+                    VaultCategory.ALL -> true
+                    VaultCategory.PASSWORDS -> entryInfo.password.isNotEmpty()
+                    VaultCategory.PASSKEYS -> isPasskeyEntry(entryInfo)
+                    VaultCategory.TOTP -> isTotpEntry(entryInfo)
+                    VaultCategory.FAVORITES -> isFavoriteEntry(entryInfo)
+                }
+                if (matches) {
+                    result.add(
+                        SortedEntryInfo(
+                            entryToCopy = entryInfo,
+                            path = currentPath,
+                            indexInParent = flatIndex++,
+                            isReferenced = false
+                        )
+                    )
+                }
+            }
+
+            val childGroups = currentGroup.getChildGroups()
+            for (i in childGroups.indices) {
+                val subGroup = childGroups[i]
+                if (!isTargetRecycleBin && recycleBinId != null && subGroup.nodeId == recycleBinId) {
+                    continue
+                }
+                if (!nodeFilter.filter(subGroup)) continue
+                val subPath = if (currentPath.isEmpty() || currentPath == "/") {
+                    "/${subGroup.title}"
+                } else {
+                    "$currentPath/${subGroup.title}"
+                }
+                collect(subGroup, subPath)
             }
         }
 
-        collect(group)
-
-        return collectedEntries.map { entry ->
-            SortedEntryInfo(
-                entryToCopy = database.getEntryInfoFrom(entry),
-                path = entry.getPathString(),
-                indexInParent = entry.indexInParent(),
-                isReferenced = database.isEntryReferenced(entry)
-            )
-        }
+        val startPath = if (group.nodeId == database.rootGroup?.nodeId) "/" else group.getPathString()
+        collect(group, startPath)
+        return result
     }
 }
