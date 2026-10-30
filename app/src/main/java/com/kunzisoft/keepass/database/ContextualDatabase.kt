@@ -50,6 +50,11 @@ class ContextualDatabase: DatabaseInfo() {
     var snapFileDatabaseInfo: SnapFileDatabaseInfo? = null
         private set
 
+    // Timestamp (elapsedRealtime / currentTimeMillis) of the last in-app save or load
+    @Volatile
+    var lastInAppSaveTimeMillis: Long = 0L
+        private set
+
     // To defined if unsaved data still remaining
     private val mDataModifiedSinceLastLoading = MutableStateFlow(false)
     val dataModifiedSinceLastLoadingFlow = mDataModifiedSinceLastLoading.asStateFlow()
@@ -78,6 +83,14 @@ class ContextualDatabase: DatabaseInfo() {
     }
 
     /**
+     * Record that an in-app save or load just completed
+     */
+    fun recordInAppSaveCompleted(context: Context) {
+        lastInAppSaveTimeMillis = System.currentTimeMillis()
+        saveDatabaseInfo(context)
+    }
+
+    /**
      * Indicate that the database has unsaved data still remaining,
      * Data are not necessarily changed from the app
      */
@@ -89,6 +102,7 @@ class ContextualDatabase: DatabaseInfo() {
      * Indicate that data in the database is up to date
      */
     fun indicateUpToDateData() {
+        lastInAppSaveTimeMillis = System.currentTimeMillis()
         mDataModifiedSinceLastLoading.value = false
     }
 

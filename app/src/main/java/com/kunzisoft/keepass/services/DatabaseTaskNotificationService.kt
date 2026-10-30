@@ -197,14 +197,26 @@ open class DatabaseTaskNotificationService : LockNotificationService(), Progress
 
     fun checkDatabaseInfo() {
         try {
+            if (mSaveState || mSavingActionsRunning > 0) {
+                return
+            }
             mDatabase?.let { database ->
                 database.fileUri?.let {
                     val previousDatabaseInfo = database.snapFileDatabaseInfo
                     database.saveDatabaseInfo(applicationContext)
                     val lastFileDatabaseInfo = database.snapFileDatabaseInfo ?: return
 
-                    val oldDatabaseModification = previousDatabaseInfo?.lastModification
+                    val now = System.currentTimeMillis()
+                    val lastInAppSave = database.lastInAppSaveTimeMillis
                     val newDatabaseModification = lastFileDatabaseInfo.lastModification
+                    if (lastInAppSave > 0L && (now - lastInAppSave < 15000L ||
+                                (newDatabaseModification != null && kotlin.math.abs(newDatabaseModification - lastInAppSave) < 15000L))
+                    ) {
+                        // File modification timestamp update belongs to a recent in-app save
+                        return
+                    }
+
+                    val oldDatabaseModification = previousDatabaseInfo?.lastModification
                     val oldDatabaseSize = previousDatabaseInfo?.size
 
                     val conditionExists = previousDatabaseInfo != null
@@ -243,7 +255,7 @@ open class DatabaseTaskNotificationService : LockNotificationService(), Progress
     }
 
     fun saveDatabaseInfo() {
-        mDatabase?.saveDatabaseInfo(applicationContext)
+        mDatabase?.recordInAppSaveCompleted(applicationContext)
     }
 
     /**
@@ -422,6 +434,17 @@ open class DatabaseTaskNotificationService : LockNotificationService(), Progress
                             val save = !database.isReadOnly
                                     && (intentAction == ACTION_DATABASE_SAVE
                                     || intent?.getBooleanExtra(SAVE_DATABASE_KEY, false) == true)
+                            val shouldSaveDatabaseInfo = save || when (intentAction) {
+                                ACTION_DATABASE_CREATE_TASK,
+                                ACTION_DATABASE_LOAD_TASK,
+                                ACTION_DATABASE_MERGE_TASK,
+                                ACTION_DATABASE_RELOAD_TASK,
+                                ACTION_DATABASE_ASSIGN_CREDENTIAL_TASK -> true
+                                else -> false
+                            }
+                            if (shouldSaveDatabaseInfo) {
+                                saveDatabaseInfo()
+                            }
                             try {
                                 // To indicate a save action
                                 if (result.data == null)
@@ -438,18 +461,8 @@ open class DatabaseTaskNotificationService : LockNotificationService(), Progress
                                 }
                             } finally {
                                 // Save the database info after performing action
-                                if (save)
+                                if (shouldSaveDatabaseInfo) {
                                     saveDatabaseInfo()
-                                else {
-                                    when (intentAction) {
-                                        ACTION_DATABASE_CREATE_TASK,
-                                        ACTION_DATABASE_LOAD_TASK,
-                                        ACTION_DATABASE_MERGE_TASK,
-                                        ACTION_DATABASE_RELOAD_TASK,
-                                        ACTION_DATABASE_ASSIGN_CREDENTIAL_TASK -> {
-                                            saveDatabaseInfo()
-                                        }
-                                    }
                                 }
                                 removeIntentData(intent)
                                 updateSavingActionRunning(isSavingAction, increment = false)

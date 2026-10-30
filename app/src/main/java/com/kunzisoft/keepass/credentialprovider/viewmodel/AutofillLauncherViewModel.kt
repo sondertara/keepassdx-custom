@@ -219,14 +219,19 @@ class AutofillLauncherViewModel(application: Application): CredentialLauncherVie
                 context = getApplication(),
                 database = database,
                 searchInfo = searchInfo,
-                onItemsFound = { openedDatabase, _ ->
+                onItemsFound = { openedDatabase, items ->
                     if (!readOnly) {
-                        // Show the database UI to select the entry
+                        val matchingEntryId = if (!registerInfo.username.isNullOrBlank()) {
+                            items.firstOrNull {
+                                it.username.equals(registerInfo.username, ignoreCase = true)
+                            }?.nodeId
+                        } else null
                         mCredentialUiState.value =
                             CredentialState.LaunchGroupActivityForRegistration(
                                 database = openedDatabase,
                                 registerInfo = registerInfo,
-                                typeMode = TypeMode.AUTOFILL
+                                typeMode = TypeMode.AUTOFILL,
+                                existingEntryId = matchingEntryId
                             )
                     } else {
                         mCredentialUiState.value = CredentialState.ShowError(

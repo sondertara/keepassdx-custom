@@ -29,8 +29,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
+import com.kunzisoft.keepass.activities.EntryEditActivity
 import com.kunzisoft.keepass.activities.FileDatabaseSelectActivity
 import com.kunzisoft.keepass.activities.GroupActivity
+import com.kunzisoft.keepass.model.EntryType
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addNodeId
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addSearchInfo
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addSpecialMode
@@ -103,13 +105,31 @@ class PasswordLauncherActivity : AuthenticationLauncherActivity() {
                         )
                     }
                     is CredentialLauncherViewModel.CredentialState.LaunchGroupActivityForRegistration -> {
-                        GroupActivity.launchForRegistration(
-                            context = this@PasswordLauncherActivity,
-                            database = uiState.database,
-                            typeMode = uiState.typeMode,
-                            registerInfo = uiState.registerInfo,
-                            activityResultLauncher = mPasswordRegistrationActivityResultLauncher
-                        )
+                        val existingEntryId = uiState.existingEntryId
+                        val rootGroupId = uiState.database.rootGroup?.nodeId
+                        if (uiState.database.loaded && !uiState.database.isReadOnly && (existingEntryId != null || rootGroupId != null)) {
+                            EntryEditActivity.launchForRegistration(
+                                context = this@PasswordLauncherActivity,
+                                database = uiState.database,
+                                nodeId = existingEntryId ?: rootGroupId!!,
+                                registerInfo = uiState.registerInfo,
+                                typeMode = uiState.typeMode,
+                                registrationType = if (existingEntryId != null)
+                                    EntryEditActivity.RegistrationType.UPDATE
+                                else
+                                    EntryEditActivity.RegistrationType.CREATE,
+                                entryType = EntryType.PASSWORD,
+                                activityResultLauncher = mPasswordRegistrationActivityResultLauncher
+                            )
+                        } else {
+                            GroupActivity.launchForRegistration(
+                                context = this@PasswordLauncherActivity,
+                                database = uiState.database,
+                                typeMode = uiState.typeMode,
+                                registerInfo = uiState.registerInfo,
+                                activityResultLauncher = mPasswordRegistrationActivityResultLauncher
+                            )
+                        }
                     }
                     is CredentialLauncherViewModel.CredentialState.LaunchFileDatabaseSelectActivityForSelection -> {
                         FileDatabaseSelectActivity.launchForSelection(

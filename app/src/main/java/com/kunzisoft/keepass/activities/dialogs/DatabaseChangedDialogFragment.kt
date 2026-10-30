@@ -71,6 +71,11 @@ class DatabaseChangedDialogFragment : DatabaseDialogFragment() {
         return super.onCreateDialog(savedInstanceState)
     }
 
+    override fun onCancel(dialog: android.content.DialogInterface) {
+        super.onCancel(dialog)
+        mDatabaseViewModel.onDatabaseChangeValidated()
+    }
+
     private fun SnapFileDatabaseInfo.toString(context: Context): String {
         val lastModificationString = DateFormat.getDateTimeInstance()
             .format(Date(lastModification ?: 0))

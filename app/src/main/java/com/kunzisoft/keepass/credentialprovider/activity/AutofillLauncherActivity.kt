@@ -32,8 +32,10 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
 import com.kunzisoft.keepass.R
+import com.kunzisoft.keepass.activities.EntryEditActivity
 import com.kunzisoft.keepass.activities.FileDatabaseSelectActivity
 import com.kunzisoft.keepass.activities.GroupActivity
+import com.kunzisoft.keepass.model.EntryType
 import com.kunzisoft.keepass.activities.legacy.DatabaseModeActivity
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addRegisterInfo
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addSearchInfo
@@ -117,13 +119,31 @@ class AutofillLauncherActivity : DatabaseModeActivity() {
                         )
                     }
                     is CredentialLauncherViewModel.CredentialState.LaunchGroupActivityForRegistration -> {
-                        GroupActivity.launchForRegistration(
-                            context = this@AutofillLauncherActivity,
-                            database = uiState.database,
-                            registerInfo = uiState.registerInfo,
-                            typeMode = uiState.typeMode,
-                            activityResultLauncher = mAutofillRegistrationActivityResultLauncher
-                        )
+                        val existingEntryId = uiState.existingEntryId
+                        val rootGroupId = uiState.database.rootGroup?.nodeId
+                        if (uiState.database.loaded && !uiState.database.isReadOnly && (existingEntryId != null || rootGroupId != null)) {
+                            EntryEditActivity.launchForRegistration(
+                                context = this@AutofillLauncherActivity,
+                                database = uiState.database,
+                                nodeId = existingEntryId ?: rootGroupId!!,
+                                registerInfo = uiState.registerInfo,
+                                typeMode = uiState.typeMode,
+                                registrationType = if (existingEntryId != null)
+                                    EntryEditActivity.RegistrationType.UPDATE
+                                else
+                                    EntryEditActivity.RegistrationType.CREATE,
+                                entryType = EntryType.PASSWORD,
+                                activityResultLauncher = mAutofillRegistrationActivityResultLauncher
+                            )
+                        } else {
+                            GroupActivity.launchForRegistration(
+                                context = this@AutofillLauncherActivity,
+                                database = uiState.database,
+                                registerInfo = uiState.registerInfo,
+                                typeMode = uiState.typeMode,
+                                activityResultLauncher = mAutofillRegistrationActivityResultLauncher
+                            )
+                        }
                     }
                     is CredentialLauncherViewModel.CredentialState.LaunchFileDatabaseSelectActivityForSelection -> {
                         FileDatabaseSelectActivity.launchForSelection(

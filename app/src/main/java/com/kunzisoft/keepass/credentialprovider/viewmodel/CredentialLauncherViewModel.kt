@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.kunzisoft.keepass.credentialprovider.SpecialMode
 import com.kunzisoft.keepass.credentialprovider.TypeMode
 import com.kunzisoft.keepass.database.ContextualDatabase
+import com.kunzisoft.keepass.database.element.EntryId
 import com.kunzisoft.keepass.model.RegisterInfo
 import com.kunzisoft.keepass.model.SearchInfo
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -127,7 +128,8 @@ abstract class CredentialLauncherViewModel(application: Application): AndroidVie
         data class LaunchGroupActivityForRegistration(
             val database: ContextualDatabase,
             val registerInfo: RegisterInfo?,
-            val typeMode: TypeMode
+            val typeMode: TypeMode,
+            val existingEntryId: EntryId? = null
         ): CredentialState()
         data class LaunchFileDatabaseSelectActivityForSelection(
             val searchInfo: SearchInfo?,

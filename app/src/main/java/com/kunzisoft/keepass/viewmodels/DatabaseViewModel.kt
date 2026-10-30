@@ -229,6 +229,8 @@ class DatabaseViewModel(application: Application): AndroidViewModel(application)
     }
 
     fun onDatabaseChangeValidated() {
+        mActionState.value = ActionState.Wait
+        database?.recordInAppSaveCompleted(getApplication())
         mDatabaseTaskProvider.onDatabaseChangeValidated()
     }
 

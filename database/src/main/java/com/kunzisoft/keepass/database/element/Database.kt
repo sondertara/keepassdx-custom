@@ -833,6 +833,7 @@ open class Database {
                         outputStream.write(buffer)
                     }
                 }
+                outputStream.flush()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Unable to save database", e)

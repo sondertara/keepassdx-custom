@@ -48,6 +48,8 @@ abstract class AuthenticationLauncherActivity: DatabaseLockActivity() {
 
     protected val userVerificationViewModel: UserVerificationViewModel by viewModels()
 
+    override fun manageDatabaseInfo(): Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // To prevent auto finish the activity

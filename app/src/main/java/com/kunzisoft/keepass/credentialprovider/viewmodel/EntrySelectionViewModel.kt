@@ -133,11 +133,13 @@ class EntrySelectionViewModel(application: Application): CredentialLauncherViewM
                 // Items found
                 if (searchInfo.otpString != null) {
                     if (!readOnly) {
+                        val singleMatchId = if (items.size == 1) items.first().nodeId else null
                         mCredentialUiState.value =
                             CredentialState.LaunchGroupActivityForRegistration(
                                 database = openedDatabase,
                                 registerInfo = searchInfo.toRegisterInfo(),
-                                typeMode = TypeMode.DEFAULT
+                                typeMode = TypeMode.DEFAULT,
+                                existingEntryId = singleMatchId
                             )
                     } else {
                         mCredentialUiState.value = CredentialState.ShowError(

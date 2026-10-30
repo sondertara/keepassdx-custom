@@ -143,6 +143,7 @@ abstract class DatabaseActivity : StylishActivity(), DatabaseRetrieval {
                                             uiState.readOnlyDatabase
                                         )
                                     }
+                                    mDatabaseViewModel.cancelAction()
                                 }
 
                                 is DatabaseViewModel.ActionState.ShowDatabaseInfoReloadedDialog -> {

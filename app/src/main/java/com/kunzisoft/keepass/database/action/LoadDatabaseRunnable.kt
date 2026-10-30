@@ -71,6 +71,7 @@ class LoadDatabaseRunnable(
                     progressTaskUpdater = progressTaskUpdater
                 )
                 indicateUpToDateData()
+                recordInAppSaveCompleted(context)
             }
         } catch (e: Exception) {
             setError(e)

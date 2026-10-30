@@ -106,6 +106,7 @@ class DatabaseTaskProvider(
     private var mBinder: DatabaseTaskNotificationService.ActionTaskBinder? = null
 
     private var serviceConnection: ServiceConnection? = null
+    private var isInitialConnection: Boolean = true
 
     fun destroy() {
         this.onDatabaseRetrieved = null
@@ -116,6 +117,7 @@ class DatabaseTaskProvider(
 
     fun onDatabaseChangeValidated() {
         mBinder?.getService()?.saveDatabaseInfo()
+            ?: ContextualDatabase.getInstance().recordInAppSaveCompleted(context.applicationContext)
     }
 
     private var databaseListener = object : DatabaseTaskNotificationService.DatabaseListener {
@@ -150,7 +152,10 @@ class DatabaseTaskProvider(
                         (serviceBinder as DatabaseTaskNotificationService.ActionTaskBinder?)?.apply {
                             addServiceListeners(this)
                             getService().checkDatabase()
-                            getService().checkDatabaseInfo()
+                            if (isInitialConnection) {
+                                isInitialConnection = false
+                                getService().checkDatabaseInfo()
+                            }
                             getService().checkAction()
                         }
                 }

@@ -26,8 +26,10 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.kunzisoft.keepass.activities.EntryEditActivity
 import com.kunzisoft.keepass.activities.FileDatabaseSelectActivity
 import com.kunzisoft.keepass.activities.GroupActivity
+import com.kunzisoft.keepass.model.EntryType
 import com.kunzisoft.keepass.activities.legacy.DatabaseModeActivity
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.addSearchInfo
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.setActivityResult
@@ -108,13 +110,32 @@ class EntrySelectionLauncherActivity : DatabaseModeActivity() {
                         )
                     }
                     is CredentialLauncherViewModel.CredentialState.LaunchGroupActivityForRegistration -> {
-                        GroupActivity.launchForRegistration(
-                            context = this@EntrySelectionLauncherActivity,
-                            database = uiState.database,
-                            registerInfo = uiState.registerInfo,
-                            typeMode = uiState.typeMode,
-                            activityResultLauncher = null // Null to not get any callback
-                        )
+                        val existingEntryId = uiState.existingEntryId
+                        val rootGroupId = uiState.database.rootGroup?.nodeId
+                        val isOtpLink = uiState.registerInfo?.searchInfo?.otpString != null
+                        if (uiState.database.loaded && !uiState.database.isReadOnly && (existingEntryId != null || rootGroupId != null)) {
+                            EntryEditActivity.launchForRegistration(
+                                context = this@EntrySelectionLauncherActivity,
+                                database = uiState.database,
+                                nodeId = existingEntryId ?: rootGroupId!!,
+                                registerInfo = uiState.registerInfo,
+                                typeMode = uiState.typeMode,
+                                registrationType = if (existingEntryId != null)
+                                    EntryEditActivity.RegistrationType.UPDATE
+                                else
+                                    EntryEditActivity.RegistrationType.CREATE,
+                                entryType = if (isOtpLink) EntryType.TOTP else EntryType.PASSWORD,
+                                activityResultLauncher = null
+                            )
+                        } else {
+                            GroupActivity.launchForRegistration(
+                                context = this@EntrySelectionLauncherActivity,
+                                database = uiState.database,
+                                registerInfo = uiState.registerInfo,
+                                typeMode = uiState.typeMode,
+                                activityResultLauncher = null // Null to not get any callback
+                            )
+                        }
                         finish()
                     }
                     is CredentialLauncherViewModel.CredentialState.LaunchFileDatabaseSelectActivityForSelection -> {

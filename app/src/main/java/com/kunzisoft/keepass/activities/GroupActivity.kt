@@ -1872,6 +1872,7 @@ class GroupActivity : DatabaseLockActivity() {
                     if (database.loaded) {
                         if (!database.isReadOnly) {
                             val rootGroupId = database.rootGroup?.nodeId
+                            val launcher = if (intentSenderMode) activityResultLauncher else null
                             if (typeMode == TypeMode.PASSKEY && rootGroupId != null) {
                                 EntryEditActivity.launchForRegistration(
                                     context = activity,
@@ -1881,8 +1882,55 @@ class GroupActivity : DatabaseLockActivity() {
                                     typeMode = typeMode,
                                     registrationType = EntryEditActivity.RegistrationType.CREATE,
                                     entryType = EntryType.PASSKEY,
-                                    activityResultLauncher = if (intentSenderMode)
-                                        activityResultLauncher else null
+                                    activityResultLauncher = launcher
+                                )
+                                onLaunchActivitySpecialMode()
+                            } else if (rootGroupId != null) {
+                                val isOtpLink = registerInfo?.searchInfo?.otpString != null
+                                val targetEntryType = if (isOtpLink) EntryType.TOTP else EntryType.PASSWORD
+                                SearchHelper.checkAutoSearchInfo(
+                                    context = activity,
+                                    database = database,
+                                    searchInfo = registerInfo?.searchInfo,
+                                    onItemsFound = { _, items ->
+                                        val matchingEntryId = when {
+                                            isOtpLink && items.size == 1 -> items.first().nodeId
+                                            !registerInfo?.username.isNullOrBlank() -> items.firstOrNull {
+                                                it.username.equals(registerInfo?.username, ignoreCase = true)
+                                            }?.nodeId
+                                            else -> null
+                                        }
+                                        EntryEditActivity.launchForRegistration(
+                                            context = activity,
+                                            database = database,
+                                            nodeId = matchingEntryId ?: rootGroupId,
+                                            registerInfo = registerInfo,
+                                            typeMode = typeMode,
+                                            registrationType = if (matchingEntryId != null)
+                                                EntryEditActivity.RegistrationType.UPDATE
+                                            else
+                                                EntryEditActivity.RegistrationType.CREATE,
+                                            entryType = targetEntryType,
+                                            activityResultLauncher = launcher
+                                        )
+                                        onLaunchActivitySpecialMode()
+                                    },
+                                    onItemNotFound = {
+                                        EntryEditActivity.launchForRegistration(
+                                            context = activity,
+                                            database = database,
+                                            nodeId = rootGroupId,
+                                            registerInfo = registerInfo,
+                                            typeMode = typeMode,
+                                            registrationType = EntryEditActivity.RegistrationType.CREATE,
+                                            entryType = targetEntryType,
+                                            activityResultLauncher = launcher
+                                        )
+                                        onLaunchActivitySpecialMode()
+                                    },
+                                    onDatabaseClosed = {
+                                        onCancelSpecialMode()
+                                    }
                                 )
                             } else {
                                 launchForRegistration(
@@ -1890,11 +1938,10 @@ class GroupActivity : DatabaseLockActivity() {
                                     database = database,
                                     registerInfo = registerInfo,
                                     typeMode = typeMode,
-                                    activityResultLauncher = if (intentSenderMode)
-                                        activityResultLauncher else null
+                                    activityResultLauncher = launcher
                                 )
+                                onLaunchActivitySpecialMode()
                             }
-                            onLaunchActivitySpecialMode()
                         } else {
                             activity.toastError(RegisterInReadOnlyDatabaseException())
                             onCancelSpecialMode()

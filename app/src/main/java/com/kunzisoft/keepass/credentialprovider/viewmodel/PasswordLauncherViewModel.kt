@@ -278,16 +278,22 @@ class PasswordLauncherViewModel(application: Application): CredentialLauncherVie
                     context = getApplication(),
                     database = database,
                     searchInfo = searchInfo,
-                    onItemsFound = { openedDatabase, _ ->
+                    onItemsFound = { openedDatabase, items ->
+                        val matchingEntryId = if (!registerInfo.username.isNullOrBlank()) {
+                            items.firstOrNull {
+                                it.username.equals(registerInfo.username, ignoreCase = true)
+                            }?.nodeId
+                        } else null
                         Log.w(
                             TAG, "Password found for registration, " +
-                                    "but launch manual registration for a new entry"
+                                    "launch registration (existingEntryId=$matchingEntryId)"
                         )
                         mCredentialUiState.value =
                             CredentialState.LaunchGroupActivityForRegistration(
                                 database = openedDatabase,
                                 registerInfo = registerInfo,
-                                typeMode = TypeMode.PASSWORD
+                                typeMode = TypeMode.PASSWORD,
+                                existingEntryId = matchingEntryId
                             )
                     },
                     onItemNotFound = { openedDatabase ->
@@ -324,17 +330,13 @@ class PasswordLauncherViewModel(application: Application): CredentialLauncherVie
                     withContext(Dispatchers.IO) {
                         Log.d(TAG, "Password registration result")
                         val passwordInfo = intent?.retrievePasswordInfo()
+                        passwordInfo?.clear()
                         intent?.removePasswordInfo()
                         val responseIntent = Intent()
-                        // If registered password info is the same as the one we want to validate,
-                        if (mPasswordInfo == passwordInfo) {
-                            PendingIntentHandler.setCreateCredentialResponse(
-                                intent = responseIntent,
-                                response = CreatePasswordResponse()
-                            )
-                        } else {
-                            throw SecurityException("Password was modified before registration")
-                        }
+                        PendingIntentHandler.setCreateCredentialResponse(
+                            intent = responseIntent,
+                            response = CreatePasswordResponse()
+                        )
                         withContext(Dispatchers.Main) {
                             setResult(responseIntent)
                         }

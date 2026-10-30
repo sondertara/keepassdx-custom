@@ -51,6 +51,7 @@ class ReloadDatabaseRunnable(
                 )
                 wasReloaded = true
                 indicateUpToDateData()
+                recordInAppSaveCompleted(context)
             }
         } catch (e: Exception) {
             setError(e)

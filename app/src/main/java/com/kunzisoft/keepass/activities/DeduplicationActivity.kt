@@ -57,6 +57,7 @@ class DeduplicationActivity : DatabaseLockActivity() {
 
     override fun viewToInvalidateTimeout(): View? = findViewById(android.R.id.content)
     override fun finishActivityIfReloadRequested(): Boolean = false
+    override fun manageDatabaseInfo(): Boolean = false
 
     private lateinit var toolbar: MaterialToolbar
     private lateinit var chipGroupMode: ChipGroup

@@ -76,6 +76,7 @@ open class SaveDatabaseRunnable(
                 // Indicate data was saved only if it's not a new location
                 if (databaseCopyUri == null) {
                     database.indicateUpToDateData()
+                    database.recordInAppSaveCompleted(context)
                 }
             } catch (e: DatabaseException) {
                 setError(e)

@@ -44,12 +44,14 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.kunzisoft.keepass.R
 import com.kunzisoft.keepass.activities.legacy.DatabaseLockActivity
 import com.kunzisoft.keepass.database.ContextualDatabase
+import com.kunzisoft.keepass.database.DatabaseTaskProvider.Companion.startDatabaseService
 import com.kunzisoft.keepass.database.element.GroupId
 import com.kunzisoft.keepass.importer.DatabaseBatchImporter
 import com.kunzisoft.keepass.importer.DeduplicationEngine
 import com.kunzisoft.keepass.importer.ImporterFactory
 import com.kunzisoft.keepass.importer.model.ImportBatchResult
 import com.kunzisoft.keepass.importer.parsers.VaultImporter
+import com.kunzisoft.keepass.services.DatabaseTaskNotificationService
 import com.kunzisoft.keepass.utils.getParcelableExtraCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -61,6 +63,7 @@ class ImportWizardActivity : DatabaseLockActivity() {
 
     override fun viewToInvalidateTimeout(): View? = findViewById(android.R.id.content)
     override fun finishActivityIfReloadRequested(): Boolean = false
+    override fun manageDatabaseInfo(): Boolean = false
 
     private var currentParentGroupId: GroupId? = null
     private var selectedFileUri: Uri? = null
@@ -293,12 +296,16 @@ class ImportWizardActivity : DatabaseLockActivity() {
                     conflictStrategy = conflictStrategy
                 )
 
-                // Save changes to database
-                if (summary.totalEntries > 0 || summary.updatedEntries > 0 || summary.totalGroups > 0) {
-                    saveDatabase()
-                }
-
                 withContext(Dispatchers.Main) {
+                    // Save changes to database reliably before finishing
+                    if (summary.totalEntries > 0 || summary.updatedEntries > 0 || summary.totalGroups > 0) {
+                        startDatabaseService(
+                            Bundle().apply {
+                                putBoolean(DatabaseTaskNotificationService.SAVE_DATABASE_KEY, true)
+                            },
+                            DatabaseTaskNotificationService.ACTION_DATABASE_SAVE
+                        )
+                    }
                     showLoading(false)
                     val msg = if (summary.skippedDuplicates > 0 || summary.updatedEntries > 0) {
                         getString(
